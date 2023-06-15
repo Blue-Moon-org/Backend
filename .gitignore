@@ -1,0 +1,39 @@
+# Ignore compiled Python files
+*.pyc
+
+# Ignore the virtual environment directory
+env/
+
+# Ignore Migration files
+core/migrations/
+notification/migrations/
+
+# # Ignore the Django project's settings file
+# my_project/settings.py
+
+# Ignore the static files directory (assuming it's named 'static')
+static/
+
+# Ignore the media files directory (assuming it's named 'media')
+media/
+
+# Ignore the database file (assuming it's named 'db.sqlite3')
+db.sqlite3
+
+# Ignore any local development configuration files
+*.env
+
+# Ignore log files
+*.log
+
+# Ignore cache directories
+__pycache__/
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+*.iml
+*.pydevproject
+
+# Ignore dependency management files
+pip-lock.txt
