@@ -20,8 +20,8 @@ media/
 # Ignore the database file (assuming it's named 'db.sqlite3')
 db.sqlite3
 
-# Ignore any local development configuration files
-*.env
+# # Ignore any local development configuration files
+# *.env
 
 # Ignore log files
 *.log
