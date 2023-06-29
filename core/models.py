@@ -95,6 +95,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     lastname = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True, null=True)
     sex = models.CharField(max_length=32, null=True, blank=True)
+    
     call_code = models.CharField(max_length=500, null=True, blank=True)
     otp = models.IntegerField(blank=True, null=True, default=0)
     country = models.CharField(max_length=500, null=True, blank=True)
@@ -115,7 +116,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         "self", related_name="user_following", blank=True, symmetrical=False
     )
     is_verified = models.BooleanField(default=False)
+    google = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
@@ -131,7 +134,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["email", "phone"]
     @property
     def fullname(self):
-        return self.firstname +" "+self.lasttname
+        return self.firstname +" "+self.lastname
 
     def get_short_name(self):
         return self.username
@@ -153,7 +156,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ordering = ("-created_at",)
 
     def __str__(self):
-        return self.username
+        return self.email
 
     def save(self, *args, **kwargs):
         ex = False

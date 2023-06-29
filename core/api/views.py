@@ -17,6 +17,7 @@ from .serializers import (
     FeedbackSerializer,
     SetNewPasswordSerializer,
     ResetPasswordSerializer,
+    VerifyOTPResetSerializer,
 )
 from core.email import *
 from rest_framework import generics, status, permissions
@@ -24,10 +25,9 @@ from rest_framework.generics import (
     RetrieveAPIView,
     CreateAPIView,
     UpdateAPIView,
-    DestroyAPIView,
 )
 from rest_framework.renderers import JSONRenderer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -37,7 +37,6 @@ from helper.utils import Util
 
 
 class RegisterView(generics.GenericAPIView):
-    serializer_class = RegisterSerializer
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -68,7 +67,7 @@ class RegisterView(generics.GenericAPIView):
             data = {
                 "email_body": email_html_template,
                 "to_email": user.email,
-                "email_subject": "Please verify your BlueMoon email",
+                "email_subject": "BlueMoon email Verification",
             }
             intro = {
                 "email_body": intro_html_template,
@@ -76,7 +75,7 @@ class RegisterView(generics.GenericAPIView):
                 "email_subject": "Welcome To BlueMoon",
             }
             Util.send_email(data)
-            Util.send_email(intro)
+            # Util.send_email(intro)
             user.save()
             return Response(user_data, status=status.HTTP_201_CREATED)
 
@@ -88,7 +87,6 @@ class RegisterView(generics.GenericAPIView):
 
 
 class VerifyEmail(generics.GenericAPIView):
-    serializer_class = VerifyOTPRegisterSerializer
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
@@ -130,7 +128,6 @@ class VerifyEmail(generics.GenericAPIView):
 
 
 class LoginAPIView(generics.GenericAPIView):
-    serializer_class = LoginSerializer
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -160,23 +157,19 @@ class LoginAPIView(generics.GenericAPIView):
 
 
 class ResetPasswordAPIView(generics.GenericAPIView):
-    serializer_class = ResetPasswordSerializer
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # serializer.save()
         user_data = serializer.data
         user = User.objects.filter(email=user_data["email"]).first()
         if user and user.is_active:
-            # otp = random.randint(100000, 999999)
-            # user.otp = otp
+            otp = random.randint(100000, 999999)
+            user.otp = otp
             user.save()
             html_tpl_path = "email/reset.html"
-            context_data = {"name": user.username
-                            # , "code": user.otp
-                            }
+            context_data = {"name": user.username, "code": user.otp}
             email_html_template = get_template(html_tpl_path).render(context_data)
             data = {
                 "email_body": email_html_template,
@@ -185,24 +178,60 @@ class ResetPasswordAPIView(generics.GenericAPIView):
             }
 
             Util.send_email(data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "status": True,
+                    "data": serializer.data,
+                    "message": "Password reset email has been sent.",
+                },
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response(
-                {"status": False, "message": "User not found"},
+                {"status": False, "message": "Invalid email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class VerifyResetPassword(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = VerifyOTPResetSerializer(data=request.data)
+        if serializer.is_valid():
+            user_data = serializer.data
+            email = user_data["email"]
+            user = User.objects.get(email=email)
+            # refresh = RefreshToken.for_user(user=user)
+            # refresh_token = str(refresh)
+            # access_token = str(refresh.access_token)
+            user.otp = 0
+            user.save()
+            return Response(
+                {
+                    "status": True,
+                    "data": {
+                        "email": user.email,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"status": False, "message": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
 
 class SetNewPasswordAPIView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
-
     permission_classes = (permissions.AllowAny,)
 
     def patch(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(
-            {"success": True, "message": "Password reset successful"},
+            {"success": True, "message": "Password has been reset successfully."},
             status=status.HTTP_200_OK,
         )
 
@@ -345,16 +374,17 @@ def user_followed_user(request):
 
 
 class UserProfile(APIView):
-    ##permission_classes = (permissions.AllowAny,)
-    def get_user(self, username):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_user(self, email):
         try:
-            found_user = User.objects.get(username=username)
+            found_user = User.objects.get(email=email)
             return found_user
         except User.DoesNotExist:
             return None
 
-    def get(self, request, username, format=None):
-        found_user = self.get_user(username)
+    def get(self, request, email, format=None):
+        found_user = self.get_user(email)
 
         if found_user is None:
             return Response(
@@ -368,7 +398,6 @@ class UserProfile(APIView):
 
     def put(self, request, username, format=None):
         user = request.user
-
         found_user = self.get_user(username)
 
         if found_user is None:
@@ -381,7 +410,6 @@ class UserProfile(APIView):
             serializer = UserProfileSerializer(
                 found_user, data=request.data, partial=True
             )
-
             if serializer.is_valid():
                 serializer.save()
 
@@ -426,48 +454,76 @@ class UserDetailView(RetrieveAPIView):
 
 
 class UserUpdateView(UpdateAPIView):
-    lookup_field = "username"
-    permission_classes = (AllowAny,)
+    lookup_field = "email"
+    permission_classes = (IsAuthenticated,)
     serializer_class = ListUserSerializer
     queryset = User.objects.all()
-    parser_classes = (FormParser, MultiPartParser)
+    # parser_classes = (FormParser, MultiPartParser)
 
 
-class UserDeleteView(DestroyAPIView):
-    lookup_field = "username"
-    permission_classes = (AllowAny,)
-    serializer_class = ListUserSerializer
-    queryset = User.objects.all()
+class UserDeleteView(generics.GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
 
+    def delete(self, request, email):
+        users = User.objects.filter(email=email)
 
-class ChangePassword(APIView):
-    def put(self, request, username, format=None):
-        user = request.user
+        if users.exists():
+            user = users.first()
+            user.is_active = False
+            user.is_deleted = True
 
-        if user.username == username:
-            current_password = request.data.get("current_password", None)
+            html_tpl_path = "email/delete.html"
+            context_data = {"name": user.username}
+            delete_html_template = get_template(html_tpl_path).render(context_data)
 
-            if current_password is not None:
-                passwords_match = user.check_password(current_password)
+            data = {
+                "email_body": delete_html_template,
+                "to_email": user.email,
+                "email_subject": "BlueMoon Account Deletion",
+            }
+            Util.send_email(data)
 
-                if passwords_match:
-                    new_password = request.data.get("new_password", None)
-
-                    if new_password is not None:
-                        user.set_password(new_password)
-
-                        user.save()
-
-                        return Response(status=status.HTTP_200_OK)
-
-                    else:
-                        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-                else:
-                    return Response(status=status.HTTP_400_BAD_REQUEST)
-
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            user.save()
+            return Response(
+                {"status": True, "message": "Account has been deactivated."},
+                status=status.HTTP_200_OK,
+            )
 
         else:
+            return Response(
+                {"status": False, "message": "User is not available"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+# class UserDeleteView(DestroyAPIView):
+#     lookup_field = "username"
+#     permission_classes = (AllowAny,)
+#     serializer_class = ListUserSerializer
+#     queryset = User.objects.all()
+
+
+class ChangePassword(generics.GenericAPIView):
+    permission_classes = (IsAuthenticated, )
+    def put(self, request, email, format=None):
+        users = User.objects.filter(email=email)
+
+        if not users.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        user = users.first()
+
+        current_password = request.data.get("current_password")
+        if current_password is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        passwords_match = user.check_password(current_password)
+        if not passwords_match:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        new_password = request.data.get("new_password")
+        if new_password is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response(status=status.HTTP_200_OK)

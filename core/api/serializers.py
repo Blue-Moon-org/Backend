@@ -73,7 +73,7 @@ class LogoutSerializer(serializers.Serializer):
 
 class SetNewPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(min_length=2)
-    password = serializers.CharField(min_length=6, max_length=68, write_only=True)
+    password = serializers.CharField(min_length=8, max_length=68, write_only=True)
 
     class Meta:
         fields = ["email", "password"]
@@ -89,8 +89,8 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
             return user
         except Exception as e:
-            raise AuthenticationFailed("The otp is invalid", 401)
-        return super().validate(attrs)
+            raise AuthenticationFailed("User not found", 401)
+        # return super().validate(attrs)
 
 class ResendEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -249,8 +249,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return False
 
 class ListUserSerializer(serializers.ModelSerializer):
-    avatar = Base64ImageField()
-    cover = Base64ImageField()
+    # avatar = Base64ImageField()
+    # cover = Base64ImageField()
 
     class Meta:
         model = User
@@ -258,7 +258,7 @@ class ListUserSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "email",
-            "name",
+            # "name",
             "call_code",
             "phone",
             "bio",
