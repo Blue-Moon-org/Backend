@@ -102,7 +102,12 @@ class ResendEmailSerializer(serializers.Serializer):
     def validate(self, attrs):
         email = attrs.get("email", "")
 
-        user = User.objects.filter(email=email).first()
+        users = User.objects.filter(email=email)
+
+        if not users.exists():
+            raise AuthenticationFailed("User not found")
+        
+        user = users.first()
 
         if not user.is_active:
             raise AuthenticationFailed("Account has been disabled")
@@ -120,7 +125,12 @@ class VerifyOTPResetSerializer(serializers.Serializer):
         email = attrs.get("email", "")
         otp = attrs.get("otp", "")
 
-        user = User.objects.filter(email=email).first()
+        users = User.objects.filter(email=email)
+
+        if not users.exists():
+            raise AuthenticationFailed("User not found")
+        
+        user = users.first()
 
         if not user.is_active:
             raise AuthenticationFailed("Account has been disabled")
@@ -173,7 +183,12 @@ class VerifyOTPRegisterSerializer(serializers.Serializer):
         email = attrs.get("email", "")
         otp = attrs.get("otp", "")
 
-        user = User.objects.filter(email=email).first()
+        users = User.objects.filter(email=email)
+
+        if not users.exists():
+            raise AuthenticationFailed("User not found")
+        
+        user = users.first()
         refresh = RefreshToken.for_user(user=user)
         refresh_token = str(refresh)
         access_token = str(refresh.access_token)
