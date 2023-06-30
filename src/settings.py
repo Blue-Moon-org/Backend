@@ -16,7 +16,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool, default=True)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*", "212.71.235.37"]
 
 # Logging
 from .logger import LOGGING
