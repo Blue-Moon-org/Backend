@@ -504,26 +504,42 @@ class UserDeleteView(generics.GenericAPIView):
 
 
 class ChangePassword(generics.GenericAPIView):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
+
     def put(self, request, email, format=None):
         users = User.objects.filter(email=email)
 
         if not users.exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": False, "message": "User is not available"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         user = users.first()
 
         current_password = request.data.get("current_password")
         if current_password is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": False, "message": "You must enter your old password"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         passwords_match = user.check_password(current_password)
         if not passwords_match:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": False, "message": "Incorrect Password"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         new_password = request.data.get("new_password")
         if new_password is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": False, "message": "New password must  not be empty"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user.set_password(new_password)
         user.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(
+            {"status": True, "message": "Passwod changed succesfully"},
+            status=status.HTTP_200_OK,
+        )
