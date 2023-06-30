@@ -38,6 +38,7 @@ from helper.utils import Util
 
 class RegisterView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
+    serializer_class = RegisterSerializer
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -88,6 +89,7 @@ class RegisterView(generics.GenericAPIView):
 
 class VerifyEmail(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
+    serializer_class = VerifyOTPRegisterSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = VerifyOTPRegisterSerializer(data=request.data)
@@ -129,6 +131,7 @@ class VerifyEmail(generics.GenericAPIView):
 
 class LoginAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
+    serializer_class = LoginSerializer
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -158,6 +161,7 @@ class LoginAPIView(generics.GenericAPIView):
 
 class ResetPasswordAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
+    serializer_class = ResetPasswordSerializer
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
@@ -194,6 +198,7 @@ class ResetPasswordAPIView(generics.GenericAPIView):
 
 
 class VerifyResetPassword(generics.GenericAPIView):
+    serializer_class = VerifyOTPResetSerializer
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
@@ -463,6 +468,7 @@ class UserUpdateView(UpdateAPIView):
 
 class UserDeleteView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    
 
     def delete(self, request, email):
         users = User.objects.filter(email=email)
@@ -540,6 +546,6 @@ class ChangePassword(generics.GenericAPIView):
         user.set_password(new_password)
         user.save()
         return Response(
-            {"status": True, "message": "Passwod changed succesfully"},
+            {"status": True, "message": "Password changed succesfully"},
             status=status.HTTP_200_OK,
         )
