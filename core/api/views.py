@@ -49,7 +49,7 @@ class RegisterView(generics.GenericAPIView):
             user_data = serializer.data
             otp = random.randint(100000, 999999)
             user = User.objects.get(email=user_data["email"])
-            print(otp)
+            # print(otp)
             user.otp = otp
             now = date.today()
             user.day = now.day
