@@ -8,15 +8,15 @@ from drf_extra_fields.fields import Base64ImageField
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
 
-    default_error_messages = {
-        "username": "The username should only contain alphanumeric characters"
-    }
+    # default_error_messages = {
+    #     "username": "The username should only contain alphanumeric characters"
+    # }
 
     class Meta:
         model = User
         fields = [
             "email",
-            "username",
+            # "username",
             "phone",
             "password",
             "brand_name",
@@ -25,11 +25,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             "lastname",
         ]
 
-    def validate(self, attrs):
-        username = attrs.get("username", "")
-        if not username.isalnum():
-            raise serializers.ValidationError(self.default_error_messages)
-        return attrs
+    # def validate(self, attrs):
+    #     username = attrs.get("username", "")
+    #     if not username.isalnum():
+    #         raise serializers.ValidationError(self.default_error_messages)
+    #     return attrs
 
     def create(self, validated_data):
         ##print(validated_data)

@@ -58,23 +58,22 @@ class RegisterView(generics.GenericAPIView):
             user.is_active = True
 
             user_data["email"] = user.email
-            user_data["username"] = user.username
             user_data["phone"] = user.phone
             html_tpl_path = "email/welcome.html"
             html_intro_path = "email/intro.html"
             context_data = {"name": user.username, "code": user.otp}
             email_html_template = get_template(html_tpl_path).render(context_data)
-            intro_html_template = get_template(html_intro_path).render(context_data)
+            # intro_html_template = get_template(html_intro_path).render(context_data)
             data = {
                 "email_body": email_html_template,
                 "to_email": user.email,
                 "email_subject": "BlueMoon email Verification",
             }
-            intro = {
-                "email_body": intro_html_template,
-                "to_email": user.email,
-                "email_subject": "Welcome To BlueMoon",
-            }
+            # intro = {
+            #     "email_body": intro_html_template,
+            #     "to_email": user.email,
+            #     "email_subject": "Welcome To BlueMoon",
+            # }
             Util.send_email(data)
             # Util.send_email(intro)
             user.save()
@@ -139,16 +138,16 @@ class LoginAPIView(generics.GenericAPIView):
         user_data = serializer.data
         user = User.objects.get(email=user_data["email"])
         if user.is_active:
-            html_tpl_path = "email/login.html"
-            context_data = {"name": user.username, "code": user.otp}
-            email_html_template = get_template(html_tpl_path).render(context_data)
-            data = {
-                "email_body": email_html_template,
-                "to_email": user.email,
-                "email_subject": "BlueMoon login verification",
-            }
+            # html_tpl_path = "email/login.html"
+            # context_data = {"name": user.username, "code": user.otp}
+            # email_html_template = get_template(html_tpl_path).render(context_data)
+            # data = {
+            #     "email_body": email_html_template,
+            #     "to_email": user.email,
+            #     "email_subject": "BlueMoon login verification",
+            # }
 
-            Util.send_email(data)
+            # Util.send_email(data)
             return Response(
                 {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
             )
@@ -517,7 +516,7 @@ class ChangePassword(generics.GenericAPIView):
 
         if not users.exists():
             return Response(
-                {"status": False, "message": "User is not available"},
+                {"status": False, "message": "User not found"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         user = users.first()
