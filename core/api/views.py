@@ -56,27 +56,21 @@ class RegisterView(generics.GenericAPIView):
             user.month = now.month
             user.year = now.year
             user.is_active = True
-
             user_data["email"] = user.email
             user_data["phone"] = user.phone
-            html_tpl_path = "email/welcome.html"
-            html_intro_path = "email/intro.html"
-            context_data = {"name": user.username, "code": user.otp}
-            email_html_template = get_template(html_tpl_path).render(context_data)
-            # intro_html_template = get_template(html_intro_path).render(context_data)
-            data = {
-                "email_body": email_html_template,
-                "to_email": user.email,
-                "email_subject": "BlueMoon email Verification",
-            }
-            # intro = {
-            #     "email_body": intro_html_template,
-            #     "to_email": user.email,
-            #     "email_subject": "Welcome To BlueMoon",
-            # }
-            Util.send_email(data)
-            # Util.send_email(intro)
             user.save()
+            if not user_data.get("google", False):
+
+            
+                html_tpl_path = "email/welcome.html"
+                context_data = {"name": user.firstname, "code": user.otp}
+                email_html_template = get_template(html_tpl_path).render(context_data)
+                data = {
+                    "email_body": email_html_template,
+                    "to_email": user.email,
+                    "email_subject": "BlueMoon email Verification",
+                }
+                Util.send_email(data)            
             return Response(user_data, status=status.HTTP_201_CREATED)
 
         else:
@@ -135,27 +129,30 @@ class LoginAPIView(generics.GenericAPIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user_data = serializer.data
-        user = User.objects.get(email=user_data["email"])
-        if user.is_active:
-            # html_tpl_path = "email/login.html"
-            # context_data = {"name": user.username, "code": user.otp}
-            # email_html_template = get_template(html_tpl_path).render(context_data)
-            # data = {
-            #     "email_body": email_html_template,
-            #     "to_email": user.email,
-            #     "email_subject": "BlueMoon login verification",
-            # }
-
-            # Util.send_email(data)
-            return Response(
+        # user_data = serializer.data
+        # user = User.objects.get(email=user_data["email"])
+        return Response(
                 {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
             )
-        else:
-            return Response(
-                {"status": False, "message": "User is not active"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # if user.is_active:
+        #     # html_tpl_path = "email/login.html"
+        #     # context_data = {"name": user.username, "code": user.otp}
+        #     # email_html_template = get_template(html_tpl_path).render(context_data)
+        #     # data = {
+        #     #     "email_body": email_html_template,
+        #     #     "to_email": user.email,
+        #     #     "email_subject": "BlueMoon login verification",
+        #     # }
+
+        #     # Util.send_email(data)
+        #     return Response(
+        #         {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+        #     )
+        # else:
+        #     return Response(
+        #         {"status": False, "message": "User is not active"},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
 
 
 class ResetPasswordAPIView(generics.GenericAPIView):

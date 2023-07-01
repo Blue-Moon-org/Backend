@@ -71,13 +71,24 @@ WSGI_APPLICATION = 'src.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'bluemoon',
+            'USER': 'hakeem',
+            'PASSWORD': 'rexonance',
+            'HOST': 'localhost',
+            'PORT': 3306,
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -188,3 +199,8 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+
+# # twilio settings
+# TWILIO_ACCOUNT_SID = 'ACe049e152c930eb680c84c923d8bd0d99'
+# TWILIO_AUTH_TOKEN = '78fbb1ef8231566fcbce64ec49687f5b'
+# TWILIO_PHONE_NUMBER = 'your_twilio_phone_number'
