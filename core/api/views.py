@@ -31,7 +31,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from helper.utils import Util
 
@@ -58,10 +57,8 @@ class RegisterView(generics.GenericAPIView):
             user.is_active = True
             user_data["email"] = user.email
             user_data["phone"] = user.phone
-            user.save()
-            if not user_data.get("google", False):
-
             
+            if not user_data.get("google", False):
                 html_tpl_path = "email/welcome.html"
                 context_data = {"name": user.firstname, "code": user.otp}
                 email_html_template = get_template(html_tpl_path).render(context_data)
@@ -70,7 +67,8 @@ class RegisterView(generics.GenericAPIView):
                     "to_email": user.email,
                     "email_subject": "BlueMoon email Verification",
                 }
-                Util.send_email(data)            
+                Util.send_email(data)
+            user.save()
             return Response(user_data, status=status.HTTP_201_CREATED)
 
         else:
@@ -132,8 +130,8 @@ class LoginAPIView(generics.GenericAPIView):
         # user_data = serializer.data
         # user = User.objects.get(email=user_data["email"])
         return Response(
-                {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
-            )
+            {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+        )
         # if user.is_active:
         #     # html_tpl_path = "email/login.html"
         #     # context_data = {"name": user.username, "code": user.otp}
@@ -464,7 +462,6 @@ class UserUpdateView(UpdateAPIView):
 
 class UserDeleteView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
-    
 
     def delete(self, request, email):
         users = User.objects.filter(email=email)
