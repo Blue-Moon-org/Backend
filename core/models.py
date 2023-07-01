@@ -89,7 +89,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                   default=BUYER)
     email = models.EmailField(max_length=255, unique=True)
     phone = models.CharField(max_length=255, unique=True)
-    username = models.CharField(max_length=255, unique=True)
+    username = models.CharField(max_length=255, null=True, blank=True)
     brand_name = models.CharField(max_length=255, null=True, blank=True)
     firstname = models.CharField(max_length=255, blank=True)
     lastname = models.CharField(max_length=255, blank=True)
@@ -130,8 +130,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["email", "phone"]
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["phone"]
     @property
     def fullname(self):
         return self.firstname +" "+self.lastname
@@ -161,14 +161,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     def save(self, *args, **kwargs):
         ex = False
         SIZE = 250, 250
-        if self.username:
-            to_slug = slugify(str(self.username))
+        if self.email:
+            to_slug = slugify(str(self.email))
             ex = User.objects.filter(slug=to_slug).exists()
             while ex:
                 to_slug = slugify(to_slug + "" + str(get_random_code()))
                 ex = User.objects.filter(slug=to_slug).exists()
         else:
-            to_slug = str(self.username)
+            to_slug = str(self.email)
         self.slug = to_slug
         super().save(*args, **kwargs)
 
