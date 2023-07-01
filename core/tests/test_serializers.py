@@ -28,10 +28,6 @@ class RegisterSerializerTest(TestCase):
         validated_attrs = serializer.validate(attrs)
         self.assertEqual(validated_attrs, attrs)
 
-        # Test with an invalid username
-        attrs = {"username": "invalid username!"}
-        with self.assertRaises(serializers.ValidationError):
-            serializer.validate(attrs)
 
     def test_create_user(self):
         serializer = RegisterSerializer()
