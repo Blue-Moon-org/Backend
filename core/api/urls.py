@@ -1,7 +1,9 @@
 from django.urls import path
 from .views import (
     # UserIDView,
+    PhoneVerifyAPIView,
     RegisterView,
+    ResendOtpAPIView,
     UserProfile,
     # ResendRegisterEmailView,
     VerifyEmail,
@@ -50,6 +52,8 @@ urlpatterns = [
         VerifyResetPassword.as_view(),
         name="verify-forgot-password",
     ),
+    path("resend-otp/<str:email>/", ResendOtpAPIView.as_view(), name='resend-otp'),
+    path("phone-verify/", PhoneVerifyAPIView.as_view(), name='phone-verify'),
     path("set-new-password/", SetNewPasswordAPIView.as_view(), name="set-new-password"),
     path("verify-email/", VerifyEmail.as_view(), name="verify-email"),
     # path("email-login-verify/", VerifyLoginEmail.as_view(), name="email-login-verify"),

@@ -8,6 +8,7 @@ from django.template.loader import get_template
 from core.models import User, Feedback
 from notification.models import Notification
 from .serializers import (
+    GetEmailSerializer,
     ListUserSerializer,
     UserProfileSerializer,
     RegisterSerializer,
@@ -33,6 +34,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from helper.utils import Util
+from twilio.rest import Client
 
 
 class RegisterView(generics.GenericAPIView):
@@ -167,7 +169,7 @@ class ResetPasswordAPIView(generics.GenericAPIView):
             user.otp = otp
             user.save()
             html_tpl_path = "email/reset.html"
-            context_data = {"name": user.username, "code": user.otp}
+            context_data = {"name": user.firstname, "code": user.otp}
             email_html_template = get_template(html_tpl_path).render(context_data)
             data = {
                 "email_body": email_html_template,
@@ -190,6 +192,91 @@ class ResetPasswordAPIView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
+
+
+class ResendOtpAPIView(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = GetEmailSerializer
+
+    def post(self, request, email):
+        serializer = GetEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_data = serializer.data
+        user = User.objects.filter(email=user_data["email"]).first()
+        if user and user.is_active:
+            otp = random.randint(100000, 999999)
+            user.otp = otp
+            user.save()
+
+            if email == "email":
+                # Send the verification code via email
+                html_tpl_path = "email/welcome.html"
+                context_data = {"name": user.firstname, "code": user.otp}
+                email_html_template = get_template(html_tpl_path).render(context_data)
+                data = {
+                    "email_body": email_html_template,
+                    "to_email": user.email,
+                    "email_subject": "BlueMoon email Verification",
+                }
+                Util.send_email(data)
+            else:
+                # Send the verification code via SMS using Twilio
+                client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+                message = client.messages.create(
+                    body=f'Your verification code is: {user.otp}',
+                    from_=settings.TWILIO_PHONE_NUMBER,
+                    to="+234"+user.phone[1:]
+                )
+
+            return Response(
+                {
+                    "status": True,
+                    "data": serializer.data,
+                    "message": "Verification code has been sent.",
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"status": False, "message": "Invalid email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+class PhoneVerifyAPIView(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = GetEmailSerializer
+
+    def post(self, request):
+        serializer = GetEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_data = serializer.data
+        user = User.objects.filter(email=user_data["email"]).first()
+        if user and user.is_active:
+            verification_code = random.randint(100000, 999999)
+            user.otp = verification_code
+            user.save()
+
+            # Send the verification code via SMS using Twilio
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+            message = client.messages.create(
+                body=f'Your verification code is: {verification_code}',
+                from_=settings.TWILIO_PHONE_NUMBER,
+                to="+234"+user.phone[1:]
+            )
+
+            return Response(
+                {
+                    "status": True,
+                    "data": serializer.data,
+                    "message": "Verification code has been sent.",
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"status": False, "message": "Invalid email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 class VerifyResetPassword(generics.GenericAPIView):
     serializer_class = VerifyOTPResetSerializer
