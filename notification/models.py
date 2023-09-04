@@ -1,9 +1,7 @@
 from django.db import models
 from django.utils import timezone
-
 from core.models import User
 
-# from block.models import Post, Comment
 
 
 def pluralize(value, unit):
@@ -45,8 +43,6 @@ class Notification(models.Model):
 
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="create")
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="to")
-    # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='+', blank=True, null=True)
-    # comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='+', blank=True, null=True)
     notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     comments = models.TextField(null=True, blank=True)
     created = models.DateTimeField(default=timezone.now)

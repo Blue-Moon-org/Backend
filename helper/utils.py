@@ -1,8 +1,11 @@
 from django.core.mail import EmailMessage
 from string import digits, ascii_lowercase, ascii_uppercase
 from secrets import choice as secret_choice
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from random import choice as random_choice
 import threading
+import datetime
 import uuid
 
 
@@ -50,8 +53,7 @@ class Util:
         email.content_subtype = "html"
         EmailThread(email).start()
 
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
+
 
 DEFAULT_PAGE = 1
 DEFAULT_PAGE_SIZE = 10
@@ -73,3 +75,10 @@ class CustomPagination(PageNumberPagination):
                 'previous':self.get_previous_link()
             }
         })
+
+def get_timezone_datetime():
+    current_date = datetime.datetime.now()
+    current_date = current_date.\
+        replace(tzinfo=datetime.timezone.utc)
+
+    return current_date.isoformat()

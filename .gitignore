@@ -5,8 +5,12 @@
 env/
 
 # Ignore Migration files
-core/migrations/
-notification/migrations/
+migrations/
+# core/migrations/
+# notification/migrations/
+# post/migrations/
+# search/migrations/
+# product/migrations/
 
 # # Ignore the Django project's settings file
 # my_project/settings.py

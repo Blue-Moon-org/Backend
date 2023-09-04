@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import Notification
+from notification.models import Notification
 from .serializers import NotificationSerializer
 
 from django.shortcuts import get_object_or_404
