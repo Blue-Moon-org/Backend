@@ -51,6 +51,13 @@ class Post(models.Model):
 class Image(models.Model):
     post = models.ForeignKey(Post, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='post_images/')
+    @property
+    def image_url(self):
+
+        if self.image and hasattr(self.image, "url"):
+            return self.image.url
+        else:
+            return ""
 
 class Category(models.Model):
     authur = models.ForeignKey(User, related_name="post_category", on_delete=models.CASCADE)

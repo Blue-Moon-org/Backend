@@ -86,7 +86,8 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return Comment.objects.filter(post=obj.id).count()
     
     def get_images(self, obj):
-        return ImagesSerializer(Image.objects.filter(post=obj.id), many=True).data
+        data = ImagesSerializer(Image.objects.filter(post=obj.id), many=True).data
+        return data
     
     def get_user_has_liked(self, obj):
         request = self.context.get("request")

@@ -17,7 +17,7 @@ class FeaturedPosts(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     def get(self, request):
         featured_posts = Post.objects.filter(is_featured=True)
-        serializer = PostSerializer(featured_posts, many=True)
+        serializer = PostDetailSerializer(featured_posts, many=True)
 
         return Response(
             {
@@ -34,12 +34,11 @@ class FeedView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def list(self, request, category="All", *args, **kwargs):
-        print(request.build_absolute_uri())
+        print(request.build_absolute_uri("/"))
         if category == "All":
             queryset = Post.objects.all()
             page = self.paginate_queryset(queryset)
             if page is not None:
-                print("Not None")
                 serializer = self.get_serializer(page, many=True)
             else:
                 serializer = self.get_serializer(queryset, many=True)
@@ -57,32 +56,6 @@ class FeedView(ListAPIView):
                 "category": category,
                 "posts": serializer.data,
             }
-
-        # categories = Post.objects.values_list('category', flat=True).distinct()
-        # category_data = []
-        # for category in set(categories):
-        #     queryset = Post.objects.filter(category=category)
-        #     page = self.paginate_queryset(queryset)  # Paginate the queryset
-
-        #     if page is not None:
-        #         serializer = self.get_serializer(page, many=True)
-        #     else:
-        #         serializer = self.get_serializer(queryset, many=True)
-
-        #     category_data.append({
-        #         "category": category,
-        #         "posts": serializer.data,
-        #     })
-        # queryset = Post.objects.all()
-        # page = self.paginate_queryset(queryset)
-        # category_data.append(self.get_paginated_response({
-        #         "category": "All",
-        #         "posts": serializer.data,
-        #     }))
-
-        # Optionally, get featured posts (assuming this is paginated as well)
-        # featured_posts = self.paginate_queryset(Post.objects.filter(is_featured=True))
-        # featured_serializer = PostDetailSerializer(featured_posts, many=True)
 
         response_data = {
             "status": True,
@@ -130,7 +103,9 @@ class PostView(APIView):
             post = serializer.save(owner=user)
             # Save each image associated with the post
             for image in images:
-                Image.objects.create(post=post, image=image)
+                img = Image.objects.create(post=post, image=image)
+                img.save()
+
             return Response(
                 {
                     "status": True,
@@ -145,17 +120,7 @@ class PostView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    # def get(self, request):
-    #     posts = Post.objects.all()
-    #     serializer = PostDetailSerializer(posts, many=True)
-    #     return Response(
-    #         {
-    #             "status": True,
-    #             "message": "Posts fetched successfully",
-    #             "data": serializer.data,
-    #         },
-    #         status=status.HTTP_200_OK,
-    #     )
+    
     
 class PostDetail(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
@@ -228,49 +193,6 @@ class FavoritePost(APIView):
                 {"status": True, "message": "Post removed as favorite"},
                 status=status.HTTP_200_OK,
             )
-
-# class CategoryList(APIView):
-#     def post(self, request):
-
-#         auth_status = Helper(request).is_autheticated()
-#         if auth_status["status"]:
-#             user = User.objects.filter(id=auth_status["payload"]["id"]).first()
-#             data = get_data(request.POST)
-#             serializer = CategorySerializer(data=data)
-#             if serializer.is_valid():
-#                 serializer.save(authur=user)
-
-#                 return Response(
-#                     {
-#                         "status": True,
-#                         "message": "Post created successfully",
-#                         "data": serializer.data,
-#                     },
-#                     status=status.HTTP_201_CREATED,
-#                 )
-
-#             else:
-#                 return Response(
-#                     {"status": False, "message": serializer.errors},
-#                     status=status.HTTP_200_OK,
-#                 )
-#         else:
-#             return Response(
-#                 {"status": False, "message": "Unathorised"},
-#                 status=status.HTTP_401_UNAUTHORIZED,
-#             )
-
-#     def get(self, request):
-#         cats = Category.objects.all()
-#         serializer = CategorySerializer(cats, many=True)
-#         return Response(
-#             {
-#                 "status": True,
-#                 "message": "Category fetched successfully",
-#                 "data": serializer.data,
-#             },
-#             status=status.HTTP_200_OK,
-#         )
 
 
 class CategoryDetail(RetrieveUpdateDestroyAPIView):
