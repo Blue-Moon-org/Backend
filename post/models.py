@@ -3,12 +3,19 @@ from core.models import User
 from django.utils.translation import gettext_lazy as _
 
 
+CATEGORY = (
+    ("Men", "Men"),
+    ("Women", "Women"),
+    ("Native", "Native"),
+    ("Ankara", "Ankara"),
+)
+
 class Post(models.Model):
 
     title = models.CharField(max_length=100, blank=True, default="")
     body = models.TextField(blank=True, default="")
     owner = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
-    category = models.CharField(max_length=100, blank=False, default="")
+    category = models.CharField(choices=CATEGORY, max_length=20, default="Native")
     created = models.DateTimeField(auto_now_add=True)
     is_featured = models.BooleanField(default=False)
     likes = models.ManyToManyField(
@@ -46,7 +53,7 @@ class Image(models.Model):
     image = models.ImageField(upload_to='post_images/')
 
 class Category(models.Model):
-    authur = models.ForeignKey(User, related_name="catgory", on_delete=models.CASCADE)
+    authur = models.ForeignKey(User, related_name="post_category", on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=False, default="", unique=True)
 
     class Meta:

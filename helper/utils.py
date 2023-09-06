@@ -28,9 +28,9 @@ def otp_generator(size: int = 6, char: str = digits) -> str:
     return "".join(secret_choice(char) for _ in range(size))
 
 
-def get_random_code():
-    code = str(uuid.uuid4())[:8].replace("-", " ").lower()
-    return code
+# def get_random_code():
+#     code = str(uuid.uuid4())[:8].replace("-", " ").lower()
+#     return code
 
 
 class EmailThread(threading.Thread):

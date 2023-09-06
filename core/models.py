@@ -7,7 +7,6 @@ from django.contrib.auth.models import (
 )
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-from helper.utils import get_random_code
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import ugettext_lazy as _
 
@@ -80,9 +79,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(
         primary_key=True, unique=True, default=uuid.uuid4, editable=False
     )
-    # avatar = models.ImageField(upload_to=upload_to, blank=True, null=True)
+    # avatar = models.ImageField(upload_to="avatar/", blank=True, null=True)
     # cover = models.ImageField(upload_to=upload_for, blank=True, null=True)
-    image = models.ImageField(upload_to="", blank=True, null=True)
+    image = models.ImageField(upload_to="avatar/", blank=True, null=True)
 
     account_type = models.CharField(max_length=9,
                   choices=TYPES,
@@ -159,16 +158,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def save(self, *args, **kwargs):
-        ex = False
-        SIZE = 250, 250
-        if self.email:
-            to_slug = slugify(str(self.email))
-            ex = User.objects.filter(slug=to_slug).exists()
-            while ex:
-                to_slug = slugify(to_slug + "" + str(get_random_code()))
-                ex = User.objects.filter(slug=to_slug).exists()
-        else:
-            to_slug = str(self.email)
+        # ex = False
+        # SIZE = 250, 250
+        # if self.email:
+        #     to_slug = slugify(str(self.email))
+        #     ex = User.objects.filter(slug=to_slug).exists()
+        #     while ex:
+        #         to_slug = slugify(to_slug + "" + str(get_random_code()))
+        #         ex = User.objects.filter(slug=to_slug).exists()
+        # else:
+        #     to_slug = str(self.email)
+        to_slug = slugify(str(self.email))
         self.slug = to_slug
         super().save(*args, **kwargs)
 

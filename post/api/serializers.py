@@ -23,16 +23,18 @@ class PostSerializer(serializers.ModelSerializer):
     def get_url(self, obj):
         return reverse("post-detail", kwargs={"pk": obj.pk})
 
-
 class PostDetailSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.nickname")
     likes = serializers.SerializerMethodField(method_name="get_likes")
     shares = serializers.SerializerMethodField(method_name="get_shares")
     favs = serializers.SerializerMethodField(method_name="get_favs")
-    comments = serializers.SerializerMethodField(method_name="get_comments")
+    # comments = serializers.SerializerMethodField(method_name="get_comments")
     no_comments = serializers.SerializerMethodField(method_name="get_no_comments")
     url = serializers.SerializerMethodField(method_name="get_url")
     images = serializers.SerializerMethodField(method_name="get_images")
+    user_has_liked = serializers.SerializerMethodField(method_name="get_user_has_liked")
+    user_has_favorited = serializers.SerializerMethodField(method_name="get_user_has_favorited")  # New field
+    user_has_shared = serializers.SerializerMethodField(method_name="get_user_has_shared")  # New field
 
     class Meta:
         model = Post
@@ -48,12 +50,20 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "favs",
             "no_comments",
             "images",
-            "comments",
+            # "comments",
             "url",
+            "user_has_liked",
+            "user_has_favorited",  
+            "user_has_shared",  
         ]
 
         read_only_fields = [
             "likes",
+            "shares",
+            "favs",
+            "user_has_liked",
+            "user_has_favorited",  
+            "user_has_shared",
         ]
 
     def get_likes(self, obj):
@@ -68,14 +78,35 @@ class PostDetailSerializer(serializers.ModelSerializer):
     def get_url(self, obj):
         return reverse("post-detail", kwargs={"pk": obj.pk})
 
-    def get_comments(self, obj):
-        return CommentSerializer(Comment.objects.filter(post=obj.id), many=True).data
+    # def get_comments(self, obj):
+    #     # return reverse("post-comments", kwargs={"post": obj.pk})+"?page=1"
+    #     return CommentSerializer(Comment.objects.filter(post=obj.id), many=True).data[:10]
     
     def get_no_comments(self, obj):
         return Comment.objects.filter(post=obj.id).count()
     
     def get_images(self, obj):
         return ImagesSerializer(Image.objects.filter(post=obj.id), many=True).data
+    
+    def get_user_has_liked(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(id=request.user.id).exists()
+        return False
+    
+    # New method to check if the current user has favorited the post
+    def get_user_has_favorited(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.favourite.filter(id=request.user.id).exists()
+        return False
+    
+    # New method to check if the current user has shared the post
+    def get_user_has_shared(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.shares.filter(id=request.user.id).exists()
+        return False
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -92,6 +123,13 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ["id", "post", "body", "owner", "created"]
+
+class CommentDetailSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source="owner.fullname")
+
+    class Meta:
+        model = Comment
+        fields = ["id", "body", "owner", "created"]
 
 class ImagesSerializer(serializers.ModelSerializer):
 

@@ -1,10 +1,11 @@
 from post.models import Post  # , Comment, Category, LikedPost
 from core.models import User
-#from ..helper import Helper, get_data
+from helper.utils import CustomPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
+    ListAPIView
 )
 from rest_framework import status
 from post.api.serializers import *
@@ -27,28 +28,98 @@ class FeaturedPosts(APIView):
             status=status.HTTP_200_OK,
         )
 
-class FeedView(APIView):
+class FeedView(ListAPIView):
+    serializer_class = PostDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        user = request.user
-        posts = Post.objects.all()
-        serializer = PostDetailSerializer(posts, many=True)
+    def list(self, request, category="All", *args, **kwargs):
+        print(request.build_absolute_uri())
+        if category == "All":
+            queryset = Post.objects.all()
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                print("Not None")
+                serializer = self.get_serializer(page, many=True)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
 
-        return Response(
-            {
-                "status": True,
-                "message": "Posts fetched successfully",
-                "data": serializer.data,
-            },
-            status=status.HTTP_200_OK,
-        )
+        else:
+
+            queryset = Post.objects.filter(category=category)
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
+
+        category_data = {
+                "category": category,
+                "posts": serializer.data,
+            }
+
+        # categories = Post.objects.values_list('category', flat=True).distinct()
+        # category_data = []
+        # for category in set(categories):
+        #     queryset = Post.objects.filter(category=category)
+        #     page = self.paginate_queryset(queryset)  # Paginate the queryset
+
+        #     if page is not None:
+        #         serializer = self.get_serializer(page, many=True)
+        #     else:
+        #         serializer = self.get_serializer(queryset, many=True)
+
+        #     category_data.append({
+        #         "category": category,
+        #         "posts": serializer.data,
+        #     })
+        # queryset = Post.objects.all()
+        # page = self.paginate_queryset(queryset)
+        # category_data.append(self.get_paginated_response({
+        #         "category": "All",
+        #         "posts": serializer.data,
+        #     }))
+
+        # Optionally, get featured posts (assuming this is paginated as well)
+        # featured_posts = self.paginate_queryset(Post.objects.filter(is_featured=True))
+        # featured_serializer = PostDetailSerializer(featured_posts, many=True)
+
+        response_data = {
+            "status": True,
+            "message": "Posts fetched successfully",
+            "categoryData": category_data,
+            
+        }
+
+        return self.get_paginated_response(response_data)
+
+class CommentView(ListAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    serializer_class = CommentDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+
+    def list(self, request, post, *args, **kwargs):
+        # print(request.build_absolute_uri())
+        queryset = Comment.objects.filter(post=post)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+        response_data = {
+            "status": True,
+            "message": "comments fetched successfully",
+            "comments": serializer.data,
+            
+        }
+        return self.get_paginated_response(response_data)
     
 
 class PostView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        
         user = request.user
         data = request.POST
         serializer = PostSerializer(data=data)
@@ -57,7 +128,6 @@ class PostView(APIView):
         
         if serializer.is_valid():
             post = serializer.save(owner=user)
-        
             # Save each image associated with the post
             for image in images:
                 Image.objects.create(post=post, image=image)
@@ -75,17 +145,17 @@ class PostView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    def get(self, request):
-        posts = Post.objects.all()
-        serializer = PostDetailSerializer(posts, many=True)
-        return Response(
-            {
-                "status": True,
-                "message": "Posts fetched successfully",
-                "data": serializer.data,
-            },
-            status=status.HTTP_200_OK,
-        )
+    # def get(self, request):
+    #     posts = Post.objects.all()
+    #     serializer = PostDetailSerializer(posts, many=True)
+    #     return Response(
+    #         {
+    #             "status": True,
+    #             "message": "Posts fetched successfully",
+    #             "data": serializer.data,
+    #         },
+    #         status=status.HTTP_200_OK,
+    #     )
     
 class PostDetail(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
@@ -99,9 +169,8 @@ class LikePost(APIView):
         parameters = [pk]
     """
     permission_classes = [IsAuthenticated]
-    def get(self, request, pk):
+    def post(self, request, pk):
         user = User.objects.filter(id=request.user.id).first()
-        print(request.user)
         post = get_object_or_404(Post, pk=pk)
 
         if user in post.likes.all():
@@ -233,17 +302,17 @@ class CommentList(APIView):
                 status=status.HTTP_200_OK,
             )
 
-    def get(self, request):
-        posts = Post.objects.all()
-        serializer = PostSerializer(posts, many=True)
-        return Response(
-            {
-                "status": True,
-                "message": "Posts fetched successfully",
-                "data": serializer.data,
-            },
-            status=status.HTTP_200_OK,
-        )
+    # def get(self, request):
+    #     posts = Post.objects.all()
+    #     serializer = PostSerializer(posts, many=True)
+    #     return Response(
+    #         {
+    #             "status": True,
+    #             "message": "Posts fetched successfully",
+    #             "data": serializer.data,
+    #         },
+    #         status=status.HTTP_200_OK,
+    #     )
 
 # class BookmarksView(APIView):
 #     def post(self, request):
