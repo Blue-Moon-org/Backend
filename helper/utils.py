@@ -1,3 +1,5 @@
+import random
+import time
 from django.core.mail import EmailMessage
 from string import digits, ascii_lowercase, ascii_uppercase
 from secrets import choice as secret_choice
@@ -6,7 +8,10 @@ from rest_framework.response import Response
 from random import choice as random_choice
 import threading
 import datetime
+from django.http import HttpResponseForbidden
 import uuid
+
+from core.models import User
 
 
 def get_client_ip(request) -> str:
@@ -56,7 +61,7 @@ class Util:
 
 
 DEFAULT_PAGE = 1
-DEFAULT_PAGE_SIZE = 10
+DEFAULT_PAGE_SIZE = 12
 
 
 class CustomPagination(PageNumberPagination):
@@ -82,3 +87,27 @@ def get_timezone_datetime():
         replace(tzinfo=datetime.timezone.utc)
 
     return current_date.isoformat()
+
+def generate_transaction_id(user_id):
+    # Get the current timestamp (in milliseconds)
+    timestamp = int(time.time() * 1000)
+    # Generate a random 4-digit number
+    random_number = random.randint(1000, 9999)
+    # Create a unique ID (e.g., user ID)
+    unique_id = user_id  # Replace with the actual unique identifier
+    # Combine the elements to create the transaction ID
+    transaction_id = f"{unique_id}-{timestamp}-{random_number}"
+    return transaction_id
+
+def designer_required(view_func):
+    """
+    Decorator that allows only designer-type users to access the view.
+    """
+    def _wrapped_view(request, *args, **kwargs):
+        # Check if the user is authenticated and has the account_type set to "Designer"
+        if request.user.is_authenticated and request.user.account_type == User.DESIGNER:
+            return view_func(request, *args, **kwargs)
+        else:
+            return HttpResponseForbidden("Access Denied: Only designer-type users are allowed to access this page.")
+
+    return _wrapped_view
