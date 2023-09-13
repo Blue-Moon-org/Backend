@@ -24,7 +24,7 @@ class PostSerializer(serializers.ModelSerializer):
         return reverse("post-detail", kwargs={"pk": obj.pk})
 
 class PostDetailSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.nickname")
+    owner = serializers.ReadOnlyField(source="owner.fullname")
     likes = serializers.SerializerMethodField(method_name="get_likes")
     shares = serializers.SerializerMethodField(method_name="get_shares")
     favs = serializers.SerializerMethodField(method_name="get_favs")
@@ -108,6 +108,31 @@ class PostDetailSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.shares.filter(id=request.user.id).exists()
         return False
+    
+class UserPostDetailSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source="owner.fullname")
+    url = serializers.SerializerMethodField(method_name="get_url")
+    images = serializers.SerializerMethodField(method_name="get_images")
+
+    class Meta:
+        model = Post
+        fields = [
+            "id",
+            "title",
+            "body",
+            "owner",
+            "created",
+            "category",
+            "images",
+            "url"
+        ]    
+    
+    def get_images(self, obj):
+        data = ImagesSerializer(Image.objects.filter(post=obj.id), many=True).data
+        return data
+    
+    def get_url(self, obj):
+        return reverse("post-detail", kwargs={"pk": obj.pk})
 
 
 class CategorySerializer(serializers.ModelSerializer):

@@ -22,6 +22,6 @@ urlpatterns = [
    # path('categories/', CategoryList.as_view(), name='category-list'),
    # path('categories/<int:pk>/', CategoryDetail.as_view(), name='category-detail'),
     path('comments/<int:pk>/', CommentList.as_view(), name='comment-list'),
-    path('post-comments/<int:post>/', CommentView.as_view(), name='post-comments'),
+    path('post-comments/<int:pk>/', CommentView.as_view(), name='post-comments'),
     
 ]

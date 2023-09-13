@@ -105,7 +105,7 @@ class PostView(APIView):
             for image in images:
                 img = Image.objects.create(post=post, image=image)
                 img.save()
-            data = PostDetailSerializer(Post.objects.get(id=post.id)).data
+            data = UserPostDetailSerializer(Post.objects.get(id=post.id)).data
             return Response(
                 {
                     "status": True,
