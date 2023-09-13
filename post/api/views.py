@@ -11,7 +11,8 @@ from rest_framework import status
 from post.api.serializers import *
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-
+import logging
+log = logging.getLogger(__name__)
 
 class FeaturedPosts(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -98,7 +99,9 @@ class PostView(APIView):
         serializer = PostSerializer(data=data)
         # Get a list of all uploaded image files
         images = request.FILES.getlist('images')
-        # print(images)
+        log.info(images)
+        # images = request.FILES.get('images')
+        print(request.FILES)
         if serializer.is_valid():
             post = serializer.save(owner=user)
             # Save each image associated with the post
