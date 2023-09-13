@@ -66,14 +66,14 @@ class FeedView(ListAPIView):
 
         return self.get_paginated_response(response_data)
 
-class CommentView(ListAPIView):
+class CommentList(ListAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentDetailSerializer
     pagination_class = CustomPagination  # Use the custom pagination class
 
-    def list(self, request, post, *args, **kwargs):
+    def list(self, request, pk, *args, **kwargs):
         # print(request.build_absolute_uri())
-        queryset = Comment.objects.filter(post=post)
+        queryset = Comment.objects.filter(post=pk)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -98,19 +98,19 @@ class PostView(APIView):
         serializer = PostSerializer(data=data)
         # Get a list of all uploaded image files
         images = request.FILES.getlist('images')
-        
+        # print(images)
         if serializer.is_valid():
             post = serializer.save(owner=user)
             # Save each image associated with the post
             for image in images:
                 img = Image.objects.create(post=post, image=image)
                 img.save()
-
+            data = PostDetailSerializer(Post.objects.get(id=post.id)).data
             return Response(
                 {
                     "status": True,
                     "message": "Post created successfully",
-                    "data": serializer.data,
+                    "data":data,
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -120,7 +120,6 @@ class PostView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    
     
 class PostDetail(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
@@ -199,7 +198,7 @@ class CategoryDetail(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-class CommentList(APIView):
+class CommentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
@@ -224,17 +223,7 @@ class CommentList(APIView):
                 status=status.HTTP_200_OK,
             )
 
-    # def get(self, request):
-    #     posts = Post.objects.all()
-    #     serializer = PostSerializer(posts, many=True)
-    #     return Response(
-    #         {
-    #             "status": True,
-    #             "message": "Posts fetched successfully",
-    #             "data": serializer.data,
-    #         },
-    #         status=status.HTTP_200_OK,
-    #     )
+
 
 # class BookmarksView(APIView):
 #     def post(self, request):
