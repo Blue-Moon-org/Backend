@@ -64,7 +64,6 @@ class UserManager(BaseUserManager):
     #     return user
 
 
-
 class User(AbstractBaseUser, PermissionsMixin):
     DESIGNER = "Designer"
     BUYER = "Buyer"
@@ -81,7 +80,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     # avatar = models.ImageField(upload_to="avatar/", blank=True, null=True)
     # cover = models.ImageField(upload_to=upload_for, blank=True, null=True)
-    image = models.ImageField(upload_to="avatar/", blank=True, null=True)
+    stripe_charge_id = models.CharField(max_length=50, default="")
+    image = models.ImageField(upload_to="profile/", blank=True, null=True)
 
     account_type = models.CharField(max_length=9,
                   choices=TYPES,
@@ -99,6 +99,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     otp = models.IntegerField(blank=True, null=True, default=0)
     country = models.CharField(max_length=500, null=True, blank=True)
     state = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
     address = models.CharField(max_length=244, null=True, blank=True)
     city = models.CharField(max_length=255, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
@@ -114,6 +115,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     following = models.ManyToManyField(
         "self", related_name="user_following", blank=True, symmetrical=False
     )
+    friends = models.ManyToManyField('self', blank=True)
     is_verified = models.BooleanField(default=False)
     google = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -146,6 +148,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def followers_count(self):
         return self.followers.all().count()
+    
+    @property
+    def image_url(self):
+
+        if self.image and hasattr(self.image, "url"):
+            return self.image.url
+        else:
+            return ""
 
     @property
     def following_count(self):

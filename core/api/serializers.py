@@ -8,10 +8,6 @@ from drf_extra_fields.fields import Base64ImageField
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
 
-    # default_error_messages = {
-    #     "username": "The username should only contain alphanumeric characters"
-    # }
-
     class Meta:
         model = User
         fields = [
@@ -19,18 +15,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             # "username",
             "google",
             "phone",
+            "state",
+            "town",
             "password",
             "brand_name",
             "account_type",
             "firstname",
             "lastname",
         ]
-
-    # def validate(self, attrs):
-    #     username = attrs.get("username", "")
-    #     if not username.isalnum():
-    #         raise serializers.ValidationError(self.default_error_messages)
-    #     return attrs
 
     def create(self, validated_data):
         ##print(validated_data)
@@ -157,26 +149,7 @@ class GetEmailSerializer(serializers.Serializer):
     class Meta:
         fields = ["email"]
 
-class LoginSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(max_length=255, min_length=3)
-    password = serializers.CharField(max_length=68, min_length=8, write_only=True)
 
-    class Meta:
-        model = User
-        fields = ["email", "password", "tokens"]
-
-    def validate(self, attrs):
-        email = attrs.get("email", "")
-        password = attrs.get("password", "")
-
-        user = User.objects.filter(email=email).first()
-
-        if not user or not user.check_password(password):
-            raise AuthenticationFailed("Invalid credentials, try again")
-        if not user.is_active:
-            raise AuthenticationFailed("Account has been disabled")
-
-        return {"email": user.email, "tokens":user.tokens}
 
 class VerifyOTPRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -210,7 +183,6 @@ class VerifyOTPRegisterSerializer(serializers.Serializer):
             "email": user.email,
             "username": user.username,
             "slug": user.slug,
-            # "tokens": user.tokens,
             "refresh_token": refresh_token,
             "access_token": access_token,
         }
@@ -232,10 +204,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "phone",
             "bio",
             "sex",
-            # "avatar",
-            # "cover",
+            "image",
             "country",
             "state",
+            "town",
             "address",
             "city",
             "location",
@@ -250,6 +222,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "slug",
             "tos",
             "is_self",
+           
             "created",
             "created_at",
         )
@@ -263,16 +236,38 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 return False
         return False
 
+
     def get_following(self, obj):
         if "request" in self.context:
             request = self.context["request"]
             if obj in request.user.following.all():
                 return True
         return False
+    
 
+class LoginSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=255, min_length=3)
+    password = serializers.CharField(max_length=68, min_length=8, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ["email", "password", "tokens"]
+
+    def validate(self, attrs):
+        email = attrs.get("email", "")
+        password = attrs.get("password", "")
+
+        user = User.objects.filter(email=email).first()
+
+        if not user or not user.check_password(password):
+            raise AuthenticationFailed("Invalid credentials, try again")
+        if not user.is_active:
+            raise AuthenticationFailed("Account has been disabled")
+
+        return {"email": user.email, "tokens":user.tokens}
+    
+    
 class ListUserSerializer(serializers.ModelSerializer):
-    # avatar = Base64ImageField()
-    # cover = Base64ImageField()
 
     class Meta:
         model = User
@@ -285,8 +280,6 @@ class ListUserSerializer(serializers.ModelSerializer):
             "phone",
             "bio",
             "sex",
-            # "avatar",
-            # "cover",
             "country",
             "state",
             "address",

@@ -3,6 +3,7 @@ import time
 from django.core.mail import EmailMessage
 from string import digits, ascii_lowercase, ascii_uppercase
 from secrets import choice as secret_choice
+from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from random import choice as random_choice
@@ -10,6 +11,7 @@ import threading
 import datetime
 from django.http import HttpResponseForbidden
 import uuid
+from chat.models import Chat#, Contact
 
 from core.models import User
 
@@ -37,6 +39,18 @@ def otp_generator(size: int = 6, char: str = digits) -> str:
 #     code = str(uuid.uuid4())[:8].replace("-", " ").lower()
 #     return code
 
+def get_last_10_messages(chatId):
+    chat = get_object_or_404(Chat, id=chatId)
+    return chat.messages.order_by('-timestamp').all()[:10]
+
+
+def get_user_contact(id):
+    user = get_object_or_404(User, id=id)
+    return user
+
+
+def get_current_chat(chatId):
+    return get_object_or_404(Chat, id=chatId)
 
 class EmailThread(threading.Thread):
     def __init__(self, email):

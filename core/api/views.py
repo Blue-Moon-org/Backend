@@ -129,31 +129,13 @@ class LoginAPIView(generics.GenericAPIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # user_data = serializer.data
-        # user = User.objects.get(email=user_data["email"])
+        user_data = serializer.data
+        user = UserProfileSerializer(User.objects.get(email=user_data["email"])).data
+        data = {"tokens":user_data["tokens"], "user_data":user}
         return Response(
-            {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+            {"status": True, "data": data}, status=status.HTTP_200_OK
         )
-        # if user.is_active:
-        #     # html_tpl_path = "email/login.html"
-        #     # context_data = {"name": user.username, "code": user.otp}
-        #     # email_html_template = get_template(html_tpl_path).render(context_data)
-        #     # data = {
-        #     #     "email_body": email_html_template,
-        #     #     "to_email": user.email,
-        #     #     "email_subject": "BlueMoon login verification",
-        #     # }
-
-        #     # Util.send_email(data)
-        #     return Response(
-        #         {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
-        #     )
-        # else:
-        #     return Response(
-        #         {"status": False, "message": "User is not active"},
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
-
+        
 
 class ResetPasswordAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -474,7 +456,9 @@ class UserProfile(APIView):
 
         if found_user is None:
             return Response(
-                {"status": False, "message": "User not found"},
+                {"status": False, 
+                 "message": "User not found"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
