@@ -11,7 +11,7 @@ import threading
 import datetime
 from django.http import HttpResponseForbidden
 import uuid
-from chat.models import Chat#, Contact
+# from chat.models import Chat#, Contact
 
 from core.models import User
 
