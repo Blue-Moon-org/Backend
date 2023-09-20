@@ -65,7 +65,7 @@ stripe==6.0.0
 tomli==2.0.1
 twilio==8.4.0
 Twisted==23.8.0
-twisted-iocpsupport==1.0.4
+twisted-iocpsupport
 txaio==23.1.1
 typing_extensions==4.6.3
 uritemplate==4.1.1
