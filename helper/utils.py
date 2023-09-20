@@ -82,7 +82,7 @@ class Util:
 
 
 DEFAULT_PAGE = 1
-DEFAULT_PAGE_SIZE = 24
+DEFAULT_PAGE_SIZE = 18
 
 
 class CustomPagination(PageNumberPagination):
