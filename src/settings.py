@@ -24,19 +24,22 @@ from .logger import LOGGING
 
 # Application definition
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "channels",
     "core",
     "notification",
     "rest_framework",
     "rest_framework_simplejwt",
     "post",
     "product",
-    # "chat",
+    "chat",
+    
 ]
 
 MIDDLEWARE = [
@@ -69,7 +72,25 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'src.wsgi.application'
-ASGI_APPLICATION = "src.routing.application"
+ASGI_APPLICATION = 'src.routing.application'
+
+
+
+if DEBUG:
+    CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [("127.0.0.1", 6379)],
+            },
+        },
+    }
 
 
 # Database
@@ -184,7 +205,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     'DEFAULT_PAGINATION_CLASS': 'helper.utils.CustomPagination',
-    "PAGE_SIZE": 12,
+    "PAGE_SIZE": 24,
 }
 
 

@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     Checkout,
+    MarketFeedView,
     OrderStatusView,
     OrdersView,
     ProductView,
@@ -29,6 +30,7 @@ app_name = "product"
 urlpatterns = [
     path("user-id/", UserIDView.as_view(), name="user-id"),
     path("credit-card/", CreditcardView.as_view(), name="credit-card"),
+    path('productfeed/<str:category>/', MarketFeedView.as_view(), name='marketfeed'),
     path("bank/", BankView.as_view(), name="bank"),
     path("countries/", CountryListView.as_view(), name="country-list"),
     path("addresses/", AddressListView.as_view(), name="address-list"),

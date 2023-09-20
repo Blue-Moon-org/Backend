@@ -2,13 +2,10 @@ from django.db import models
 from core.models import User
 from django.utils.translation import gettext_lazy as _
 
+from helper.utils import CATEGORY
 
-CATEGORY = (
-    ("Men", "Men"),
-    ("Women", "Women"),
-    ("Native", "Native"),
-    ("Ankara", "Ankara"),
-)
+
+
 
 class Post(models.Model):
 

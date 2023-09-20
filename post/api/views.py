@@ -35,7 +35,6 @@ class FeedView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def list(self, request, category="All", *args, **kwargs):
-        print(request.build_absolute_uri("/"))
         if category == "All":
             queryset = Post.objects.all()
             page = self.paginate_queryset(queryset)

@@ -12,15 +12,10 @@ from decouple import config
 from stripe import BalanceTransaction
 import logging
 
-from helper.utils import generate_transaction_id
+from helper.utils import CATEGORY, generate_transaction_id
 log = logging.getLogger(__name__)
 
 stripe.api_key = config("STRIPE_SECRET_KEY") 
-
-CATEGORY = (
-    ("Men", "Men"),
-    ("Women", "Women"),
-)
 
 ORDER_TRACKING_CHOICES = (
     ("Pending", "Pending"),

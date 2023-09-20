@@ -38,30 +38,7 @@ class UserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Superuser must have is_superuser=True."))
         return self.create_user(email, password, **extra_fields)
-    # def create_user(self, **kwargs):
-    #     if not kwargs["email"]:
-    #         raise ValueError("Users must have an email address")
-    #     if not kwargs["password"]:
-    #         raise ValueError("Users must have a password")
-    #     if not kwargs["phone"]:
-    #         raise ValueError("Users must have a phone number")
-
-    #     email = self.normalize_email(kwargs["email"])
-    #     user = self.model(email=email, username=kwargs["username"], phone=kwargs["phone"])
-
-    #     user.set_password(kwargs["password"])
-    #     user.save()
-
-    #     return user
-
-    # def create_superuser(self, email, username, phone, password=None):
-    #     user = self.create_user(email, username, phone, password)
-
-    #     user.is_superuser = True
-    #     user.is_staff = True
-    #     user.save()
-
-    #     return user
+   
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -86,8 +63,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     account_type = models.CharField(max_length=9,
                   choices=TYPES,
                   default=BUYER)
-    email = models.EmailField(max_length=255, unique=True)
-    phone = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255, unique=True, null=False, blank=False)
+    phone = models.CharField(max_length=255, unique=True, null=False, blank=False)
     username = models.CharField(max_length=255, null=True, blank=True)
     brand_name = models.CharField(max_length=255, null=True, blank=True)
     firstname = models.CharField(max_length=255, blank=True)
@@ -123,8 +100,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
+    is_online = models.BooleanField(default=False)
     active = models.BooleanField(default=False)
-    slug = models.SlugField(unique=True, blank=True, null=False)
     tos = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     created = models.CharField(max_length=255, null=True, blank=True)
@@ -133,12 +110,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["phone"]
+
     @property
     def fullname(self):
         return self.firstname +" "+self.lastname
 
     def get_short_name(self):
-        return self.username
+        return self.firstname
     
     @property
     def tokens(self):
@@ -167,20 +145,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-    def save(self, *args, **kwargs):
-        # ex = False
-        # SIZE = 250, 250
-        # if self.email:
-        #     to_slug = slugify(str(self.email))
-        #     ex = User.objects.filter(slug=to_slug).exists()
-        #     while ex:
-        #         to_slug = slugify(to_slug + "" + str(get_random_code()))
-        #         ex = User.objects.filter(slug=to_slug).exists()
-        # else:
-        #     to_slug = str(self.email)
-        to_slug = slugify(str(self.email))
-        self.slug = to_slug
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     # ex = False
+    #     # SIZE = 250, 250
+    #     # if self.email:
+    #     #     to_slug = slugify(str(self.email))
+    #     #     ex = User.objects.filter(slug=to_slug).exists()
+    #     #     while ex:
+    #     #         to_slug = slugify(to_slug + "" + str(get_random_code()))
+    #     #         ex = User.objects.filter(slug=to_slug).exists()
+    #     # else:
+    #     #     to_slug = str(self.email)
+    #     to_slug = slugify(str(self.fullname))
+    #     self.slug = to_slug
+    #     super().save(*args, **kwargs)
 
 
 class Feedback(models.Model):

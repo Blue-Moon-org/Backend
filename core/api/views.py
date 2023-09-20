@@ -42,43 +42,49 @@ class RegisterView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        user_data = {}
+        data = request.data
+        data["email"] = data["email"].lower()
+        if not User.objects.filter(email=data["email"]).exists():
+            serializer = RegisterSerializer(data=data)
+            user_data = {}
 
-        if serializer.is_valid():
-            serializer.save()
-            user_data = serializer.data
-            otp = random.randint(100000, 999999)
-            user = User.objects.get(email=user_data["email"])
-            # print(otp)
-            user.otp = otp
-            now = date.today()
-            user.day = now.day
-            user.month = now.month
-            user.year = now.year
-            user.is_active = True
-            user_data["email"] = user.email
-            user_data["phone"] = user.phone
-            
-            if not user_data.get("google", False):
-                html_tpl_path = "email/welcome.html"
-                context_data = {"name": user.firstname, "code": user.otp}
-                email_html_template = get_template(html_tpl_path).render(context_data)
-                data = {
-                    "email_body": email_html_template,
-                    "to_email": user.email,
-                    "email_subject": "BlueMoon email Verification",
-                }
-                Util.send_email(data)
-            user.save()
-            return Response(user_data, status=status.HTTP_201_CREATED)
+            if serializer.is_valid():
 
-        else:
-            return Response(
-                {"status": False, "message": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+                serializer.save()
+                user_data = serializer.data
+                otp = random.randint(100000, 999999)
+                user = User.objects.get(email=user_data["email"])
+                user.otp = otp
+                now = date.today()
+                user.day = now.day
+                user.month = now.month
+                user.year = now.year
+                user.is_active = True
+                user_data["email"] = user.email
+                user_data["phone"] = user.phone
+                
+                if not user_data.get("google", False):
+                    html_tpl_path = "email/welcome.html"
+                    context_data = {"name": user.firstname, "code": user.otp}
+                    email_html_template = get_template(html_tpl_path).render(context_data)
+                    data = {
+                        "email_body": email_html_template,
+                        "to_email": user.email,
+                        "email_subject": "BlueMoon email Verification",
+                    }
+                    Util.send_email(data)
+                user.save()
+                return Response(user_data, status=status.HTTP_201_CREATED)
 
+            else:
+                return Response(
+                    {"status": False, "message": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return Response(
+                    {"status": False, "message": "Email already exists"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
 class VerifyEmail(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -121,7 +127,6 @@ class VerifyEmail(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-
 class LoginAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = LoginSerializer
@@ -136,7 +141,6 @@ class LoginAPIView(generics.GenericAPIView):
             {"status": True, "data": data}, status=status.HTTP_200_OK
         )
         
-
 class ResetPasswordAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = ResetPasswordSerializer
@@ -173,9 +177,6 @@ class ResetPasswordAPIView(generics.GenericAPIView):
                 {"status": False, "message": "Invalid email address."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-
-
 
 class ResendOtpAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -224,6 +225,7 @@ class ResendOtpAPIView(generics.GenericAPIView):
                 {"status": False, "message": "Invalid email address."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
 class PhoneVerifyAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = GetEmailSerializer
@@ -290,7 +292,6 @@ class VerifyResetPassword(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-
 class SetNewPasswordAPIView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
     permission_classes = (permissions.AllowAny,)
@@ -302,7 +303,6 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
             {"success": True, "message": "Password has been reset successfully."},
             status=status.HTTP_200_OK,
         )
-
 
 class LogoutAPIView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
@@ -322,7 +322,6 @@ class LogoutAPIView(generics.GenericAPIView):
 
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
-
 class FeedbackCreateView(CreateAPIView):
     permission_classes = (AllowAny,)
     renderer_classes = (JSONRenderer,)
@@ -338,7 +337,6 @@ class FeedbackCreateView(CreateAPIView):
             feedback = Feedback.objects.create(title=title, text=text, user=author)
         d = FeedbackSerializer(feedback).data
         return Response(d, status=status.HTTP_201_CREATED)
-
 
 class UserFollowers(APIView):
     queryset = User.objects.all()
@@ -360,7 +358,6 @@ class UserFollowers(APIView):
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-
 class UserFollowing(APIView):
     def get(self, request, username, format=None):
         try:
@@ -378,7 +375,6 @@ class UserFollowing(APIView):
         )
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
-
 
 @api_view(["POST"])
 @permission_classes((AllowAny,))
@@ -421,7 +417,6 @@ def follow_unfollow_user(request):
             status=status.HTTP_201_CREATED,
         )
 
-
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def user_followed_user(request):
@@ -439,7 +434,6 @@ def user_followed_user(request):
             },
             status=status.HTTP_201_CREATED,
         )
-
 
 class UserProfile(APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -515,13 +509,11 @@ class UserProfile(APIView):
 
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-
 class UserDetailView(RetrieveAPIView):
     lookup_field = "username"
     permission_classes = (AllowAny,)
     serializer_class = ListUserSerializer
     queryset = User.objects.all()
-
 
 class UserUpdateView(UpdateAPIView):
     lookup_field = "email"
@@ -529,7 +521,6 @@ class UserUpdateView(UpdateAPIView):
     serializer_class = ListUserSerializer
     queryset = User.objects.all()
     # parser_classes = (FormParser, MultiPartParser)
-
 
 class UserDeleteView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -564,14 +555,6 @@ class UserDeleteView(generics.GenericAPIView):
                 {"status": False, "message": "User is not available"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-
-# class UserDeleteView(DestroyAPIView):
-#     lookup_field = "username"
-#     permission_classes = (AllowAny,)
-#     serializer_class = ListUserSerializer
-#     queryset = User.objects.all()
-
 
 class ChangePassword(generics.GenericAPIView):
     permission_classes = (IsAuthenticated,)

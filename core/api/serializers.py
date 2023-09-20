@@ -2,11 +2,11 @@ from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from core.models import User, Feedback
-from drf_extra_fields.fields import Base64ImageField
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
+    email = serializers.EmailField()
 
     class Meta:
         model = User
@@ -25,7 +25,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        ##print(validated_data)
+        
         return User.objects.create_user(**validated_data)
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -41,7 +41,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class UserLessInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "fullname", "image", "bio"]
+        fields = ["fullname", "image", "bio"]
 
 class UserCountSerializer(serializers.ModelSerializer):
     class Meta:
@@ -149,15 +149,13 @@ class GetEmailSerializer(serializers.Serializer):
     class Meta:
         fields = ["email"]
 
-
-
 class VerifyOTPRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "email", "otp", "tokens", "username", "slug"]
+        fields = ["id", "email", "otp", "tokens", "fullname"]
 
     def validate(self, attrs):
         email = attrs.get("email", "")
@@ -181,8 +179,7 @@ class VerifyOTPRegisterSerializer(serializers.Serializer):
         return {
             "id": user.id,
             "email": user.email,
-            "username": user.username,
-            "slug": user.slug,
+            "fullname": user.fullname,
             "refresh_token": refresh_token,
             "access_token": access_token,
         }
@@ -197,8 +194,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id",
-            "username",
             "email",
+            "account_type",
             "fullname",
             "call_code",
             "phone",
@@ -219,10 +216,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "followers",
             "following_count",
             "following",
-            "slug",
             "tos",
             "is_self",
-           
             "created",
             "created_at",
         )
@@ -244,7 +239,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 return True
         return False
     
-
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=3)
     password = serializers.CharField(max_length=68, min_length=8, write_only=True)
@@ -266,14 +260,13 @@ class LoginSerializer(serializers.ModelSerializer):
 
         return {"email": user.email, "tokens":user.tokens}
     
-    
 class ListUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = (
             "id",
-            "username",
+            # "username",
             "email",
             # "name",
             "call_code",

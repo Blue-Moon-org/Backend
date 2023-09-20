@@ -46,6 +46,43 @@ from product.models import (
 )
 log = logging.getLogger(__name__)
 
+
+class MarketFeedView(ListAPIView):
+    serializer_class = ProductDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, category="All", *args, **kwargs):
+        if category == "All":
+            queryset = Product.objects.all()
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
+
+        else:
+
+            queryset = Product.objects.filter(category=category)
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
+
+        category_data = {
+                "category": category,
+                "product": serializer.data,
+            }
+
+        response_data = {
+            "status": True,
+            "message": "Products fetched successfully",
+            "categoryData": category_data,
+            
+        }
+        return self.get_paginated_response(response_data)
+
 class RefundTransactions(object):
     def __init__(self, charge_id, refund_id=""):
 
@@ -156,7 +193,7 @@ class ProductView(APIView):
         
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-@method_decorator(designer_required, name='dispatch')
+#@method_decorator(designer_required, name='dispatch')
 class UserProdctsView(ListAPIView):
     serializer_class = ProductDetailSerializer
     pagination_class = CustomPagination  # Use the custom pagination class

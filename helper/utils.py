@@ -11,10 +11,17 @@ import threading
 import datetime
 from django.http import HttpResponseForbidden
 import uuid
-# from chat.models import Chat#, Contact
+from chat.models import Chat#, Contact
 
 from core.models import User
 
+
+CATEGORY = (
+    ("Men", "Men"),
+    ("Women", "Women"),
+    ("Native", "Native"),
+    ("Ankara", "Ankara"),
+)
 
 def get_client_ip(request) -> str:
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
@@ -35,22 +42,22 @@ def otp_generator(size: int = 6, char: str = digits) -> str:
     return "".join(secret_choice(char) for _ in range(size))
 
 
-# def get_random_code():
-#     code = str(uuid.uuid4())[:8].replace("-", " ").lower()
-#     return code
+def get_random_code():
+    code = str(uuid.uuid4())[:8].replace("-", " ").lower()
+    return code
 
-# def get_last_10_messages(chatId):
-#     chat = get_object_or_404(Chat, id=chatId)
-#     return chat.messages.order_by('-timestamp').all()[:10]
-
-
-# def get_user_contact(id):
-#     user = get_object_or_404(User, id=id)
-#     return user
+def get_last_10_messages(chatId):
+    chat = get_object_or_404(Chat, id=chatId)
+    return chat.messages.order_by('-timestamp').all()[:10]
 
 
-# def get_current_chat(chatId):
-#     return get_object_or_404(Chat, id=chatId)
+def get_user_contact(id):
+    user = get_object_or_404(User, id=id)
+    return user
+
+
+def get_current_chat(chatId):
+    return get_object_or_404(Chat, id=chatId)
 
 class EmailThread(threading.Thread):
     def __init__(self, email):
@@ -75,7 +82,7 @@ class Util:
 
 
 DEFAULT_PAGE = 1
-DEFAULT_PAGE_SIZE = 12
+DEFAULT_PAGE_SIZE = 24
 
 
 class CustomPagination(PageNumberPagination):
