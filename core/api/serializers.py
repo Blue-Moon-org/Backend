@@ -269,6 +269,7 @@ class ListUserSerializer(serializers.ModelSerializer):
             "call_code",
             "phone",
             "bio",
+            "fullname",
             "sex",
             "country",
             "state",
