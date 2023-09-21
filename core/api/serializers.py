@@ -112,7 +112,7 @@ class VerifyOTPResetSerializer(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "otp", "username", "slug"]
+        fields = ["id", "email", "otp", "username"]
 
     def validate(self, attrs):
         email = attrs.get("email", "")
@@ -266,9 +266,6 @@ class ListUserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id",
-            # "username",
-            "email",
-            # "name",
             "call_code",
             "phone",
             "bio",
@@ -282,7 +279,6 @@ class ListUserSerializer(serializers.ModelSerializer):
             "month",
             "year",
             "dob",
-            "otp",
             "followers_count",
             "followers",
             "following_count",
@@ -290,13 +286,6 @@ class ListUserSerializer(serializers.ModelSerializer):
             "is_verified",
             "is_active",
             "active",
-            "is_staff",
-            "is_admin",
-            "is_banned",
-            "slug",
-            "tos",
-            "tokens",
             "created",
-            "created_at",
         )
         depth = 1
