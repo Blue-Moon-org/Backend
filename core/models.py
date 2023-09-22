@@ -92,6 +92,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     following = models.ManyToManyField(
         "self", related_name="user_following", blank=True, symmetrical=False
     )
+    users_notify = models.ManyToManyField(
+        "self", related_name="notify", blank=True, symmetrical=False
+    )
     friends = models.ManyToManyField('self', blank=True)
     is_verified = models.BooleanField(default=False)
     google = models.BooleanField(default=False)

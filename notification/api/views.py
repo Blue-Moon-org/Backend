@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -11,7 +11,7 @@ from helper.utils import CustomPagination
 
 
 @api_view(["GET"])
-@permission_classes((AllowAny,))
+@permission_classes((IsAuthenticated,))
 def NotificationView(request):
     notify_list = Notification.objects.filter(
         to_user=request.user,
@@ -28,14 +28,13 @@ def NotificationView(request):
     serializer = NotificationSerializer(
         result_page, many=True, context={"request": request}
     )
-    # return Response(serializer.data)
     return paginator.get_paginated_response(
         {"data": serializer.data, "noti_count": noti_count}
     )
 
 
 class NotificationSeen(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         data = request.data
@@ -47,7 +46,7 @@ class NotificationSeen(APIView):
 
 
 class NotificationDelete(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         data = request.data

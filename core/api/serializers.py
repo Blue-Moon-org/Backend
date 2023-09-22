@@ -25,28 +25,32 @@ class RegisterSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        
         return User.objects.create_user(**validated_data)
+
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
 
+
 class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback
         fields = ("id", "title", "text", "user", "created_on")
 
+
 class UserLessInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["fullname", "image", "bio"]
+        fields = ["id","fullname", "image", "bio"]
+
 
 class UserCountSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "followers_count", "following_count")
+
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
@@ -63,6 +67,7 @@ class LogoutSerializer(serializers.Serializer):
 
         except TokenError:
             self.fail("bad_token")
+
 
 class SetNewPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(min_length=2)
@@ -85,6 +90,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
             raise AuthenticationFailed("User not found", 401)
         # return super().validate(attrs)
 
+
 class ResendEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
@@ -99,12 +105,13 @@ class ResendEmailSerializer(serializers.Serializer):
 
         if not users.exists():
             raise AuthenticationFailed("User not found")
-        
+
         user = users.first()
 
         if not user.is_active:
             raise AuthenticationFailed("Account has been disabled")
         return attrs
+
 
 class VerifyOTPResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -122,7 +129,7 @@ class VerifyOTPResetSerializer(serializers.Serializer):
 
         if not users.exists():
             raise AuthenticationFailed("User not found")
-        
+
         user = users.first()
 
         if not user.is_active:
@@ -137,17 +144,20 @@ class VerifyOTPResetSerializer(serializers.Serializer):
             "slug": user.slug,
         }
 
+
 class ResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(min_length=2)
 
     class Meta:
         fields = ["email"]
 
+
 class GetEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(min_length=2)
 
     class Meta:
         fields = ["email"]
+
 
 class VerifyOTPRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -165,7 +175,7 @@ class VerifyOTPRegisterSerializer(serializers.Serializer):
 
         if not users.exists():
             raise AuthenticationFailed("User not found")
-        
+
         user = users.first()
         refresh = RefreshToken.for_user(user=user)
         refresh_token = str(refresh)
@@ -183,6 +193,7 @@ class VerifyOTPRegisterSerializer(serializers.Serializer):
             "refresh_token": refresh_token,
             "access_token": access_token,
         }
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     followers_count = serializers.ReadOnlyField()
@@ -231,14 +242,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 return False
         return False
 
-
     def get_following(self, obj):
         if "request" in self.context:
             request = self.context["request"]
             if obj in request.user.following.all():
                 return True
         return False
-    
+
+
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=3)
     password = serializers.CharField(max_length=68, min_length=8, write_only=True)
@@ -258,10 +269,10 @@ class LoginSerializer(serializers.ModelSerializer):
         if not user.is_active:
             raise AuthenticationFailed("Account has been disabled")
 
-        return {"email": user.email, "tokens":user.tokens}
-    
-class ListUserSerializer(serializers.ModelSerializer):
+        return {"email": user.email, "tokens": user.tokens}
 
+
+class ListUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -289,4 +300,3 @@ class ListUserSerializer(serializers.ModelSerializer):
             "active",
             "created",
         )
-        depth = 1

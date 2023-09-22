@@ -49,7 +49,6 @@ class RegisterView(generics.GenericAPIView):
             user_data = {}
 
             if serializer.is_valid():
-
                 serializer.save()
                 user_data = serializer.data
                 otp = random.randint(100000, 999999)
@@ -62,11 +61,13 @@ class RegisterView(generics.GenericAPIView):
                 user.is_active = True
                 user_data["email"] = user.email
                 user_data["phone"] = user.phone
-                
+
                 if not user_data.get("google", False):
                     html_tpl_path = "email/welcome.html"
                     context_data = {"name": user.firstname, "code": user.otp}
-                    email_html_template = get_template(html_tpl_path).render(context_data)
+                    email_html_template = get_template(html_tpl_path).render(
+                        context_data
+                    )
                     data = {
                         "email_body": email_html_template,
                         "to_email": user.email,
@@ -82,9 +83,10 @@ class RegisterView(generics.GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         return Response(
-                    {"status": False, "message": "Email already exists"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            {"status": False, "message": "Email already exists"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
 
 class VerifyEmail(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -127,6 +129,7 @@ class VerifyEmail(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
 class LoginAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = LoginSerializer
@@ -136,11 +139,10 @@ class LoginAPIView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user_data = serializer.data
         user = UserProfileSerializer(User.objects.get(email=user_data["email"])).data
-        data = {"tokens":user_data["tokens"], "user_data":user}
-        return Response(
-            {"status": True, "data": data}, status=status.HTTP_200_OK
-        )
-        
+        data = {"tokens": user_data["tokens"], "user_data": user}
+        return Response({"status": True, "data": data}, status=status.HTTP_200_OK)
+
+
 class ResetPasswordAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = ResetPasswordSerializer
@@ -178,6 +180,7 @@ class ResetPasswordAPIView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
 class ResendOtpAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = GetEmailSerializer
@@ -207,9 +210,9 @@ class ResendOtpAPIView(generics.GenericAPIView):
                 # Send the verification code via SMS using Twilio
                 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
                 message = client.messages.create(
-                    body=f'Your verification code is: {user.otp}',
+                    body=f"Your verification code is: {user.otp}",
                     from_=settings.TWILIO_PHONE_NUMBER,
-                    to="+234"+user.phone[1:]
+                    to="+234" + user.phone[1:],
                 )
 
             return Response(
@@ -225,6 +228,7 @@ class ResendOtpAPIView(generics.GenericAPIView):
                 {"status": False, "message": "Invalid email address."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
 
 class PhoneVerifyAPIView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -243,9 +247,9 @@ class PhoneVerifyAPIView(generics.GenericAPIView):
             # Send the verification code via SMS using Twilio
             client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
             message = client.messages.create(
-                body=f'Your verification code is: {verification_code}',
+                body=f"Your verification code is: {verification_code}",
                 from_=settings.TWILIO_PHONE_NUMBER,
-                to="+234"+user.phone[1:]
+                to="+234" + user.phone[1:],
             )
 
             return Response(
@@ -261,6 +265,7 @@ class PhoneVerifyAPIView(generics.GenericAPIView):
                 {"status": False, "message": "Invalid email address."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
 
 class VerifyResetPassword(generics.GenericAPIView):
     serializer_class = VerifyOTPResetSerializer
@@ -292,6 +297,7 @@ class VerifyResetPassword(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
 class SetNewPasswordAPIView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
     permission_classes = (permissions.AllowAny,)
@@ -303,6 +309,7 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
             {"success": True, "message": "Password has been reset successfully."},
             status=status.HTTP_200_OK,
         )
+
 
 class LogoutAPIView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
@@ -322,6 +329,7 @@ class LogoutAPIView(generics.GenericAPIView):
 
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
+
 class FeedbackCreateView(CreateAPIView):
     permission_classes = (AllowAny,)
     renderer_classes = (JSONRenderer,)
@@ -338,14 +346,15 @@ class FeedbackCreateView(CreateAPIView):
         d = FeedbackSerializer(feedback).data
         return Response(d, status=status.HTTP_201_CREATED)
 
+
 class UserFollowers(APIView):
     queryset = User.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = ListUserSerializer
 
-    def get(self, request, username, format=None):
+    def get(self, request, id, format=None):
         try:
-            found_user = User.objects.get(username=username)
+            found_user = User.objects.get(id=id)
             print(f"found user {found_user}")
         except User.DoesNotExist:
             return Response(
@@ -358,10 +367,15 @@ class UserFollowers(APIView):
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+
 class UserFollowing(APIView):
-    def get(self, request, username, format=None):
+    queryset = User.objects.all()
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ListUserSerializer
+
+    def get(self, request, id, format=None):
         try:
-            found_user = User.objects.get(username=username)
+            found_user = User.objects.get(id=id)
             print(f"found user {found_user}")
         except User.DoesNotExist:
             return Response(
@@ -370,18 +384,19 @@ class UserFollowing(APIView):
             )
 
         user_following = found_user.following.all()
-        serializer = ListUserSerializer(
+        serializer = self.serializer_class(
             user_following, many=True, context={"request": request}
         )
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-@api_view(["POST"])
-@permission_classes((AllowAny,))
-def follow_unfollow_user(request):
-    if request.method == "POST":
-        username = request.data.get("username")
-        fu_user = get_object_or_404(User, username=username)
+
+class FollowUnfollowUser(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        id = request.data.get("id")
+        fu_user = get_object_or_404(User, id=id)
         user = request.user
 
         if fu_user in user.following.all():
@@ -391,9 +406,9 @@ def follow_unfollow_user(request):
             fu_user.followers.remove(user)
             fu_user.save()
 
-            Notification.objects.get_or_create(
+            notify, _ = Notification.objects.get_or_create(
                 notification_type="UF",
-                comments=(f"@{user.username} unfollowed you"),
+                comments=f"@{user.firstname} unfollowed you",
                 to_user=fu_user,
                 from_user=user,
             )
@@ -404,12 +419,14 @@ def follow_unfollow_user(request):
             fu_user.followers.add(user)
             fu_user.save()
 
-            Notification.objects.get_or_create(
+            notify, _ = Notification.objects.get_or_create(
                 notification_type="F",
-                comments=(f"@{user.username} followed you"),
+                comments=f"@{user.firstname} followed you",
                 to_user=fu_user,
                 from_user=user,
             )
+        notify.save()
+        
         return Response(
             {
                 "following": following,
@@ -417,23 +434,54 @@ def follow_unfollow_user(request):
             status=status.HTTP_201_CREATED,
         )
 
-@api_view(["POST"])
-@permission_classes((AllowAny,))
-def user_followed_user(request):
-    if request.method == "POST":
-        username = request.data.get("username")
-        fu_user = get_object_or_404(User, username=username)
+
+
+
+class AddToNotify(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        id = request.data.get("id")
+        fu_user = get_object_or_404(User, id=id)
         user = request.user
-        if user in fu_user.followers.all():
-            following = True
+
+        if fu_user in user.users_notify.all():
+            user_added = False
+            user.users_notify.remove(fu_user)
+            user.save()
+            
         else:
-            following = False
+            user_added = True
+            user.users_notify.add(fu_user)
+            user.save()
+        
         return Response(
             {
-                "following": following,
+                "user_added": user_added,
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+
+# @api_view(["POST"])
+# @permission_classes((AllowAny,))
+# def user_followed_user(request):
+#     if request.method == "POST":
+#         username = request.data.get("username")
+#         fu_user = get_object_or_404(User, username=username)
+#         user = request.user
+#         if user in fu_user.followers.all():
+#             following = True
+#         else:
+#             following = False
+#         return Response(
+#             {
+#                 "following": following,
+#             },
+#             status=status.HTTP_201_CREATED,
+#         )
+
 
 class UserProfile(APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -450,9 +498,7 @@ class UserProfile(APIView):
 
         if found_user is None:
             return Response(
-                {"status": False, 
-                 "message": "User not found"
-                },
+                {"status": False, "message": "User not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -509,18 +555,39 @@ class UserProfile(APIView):
 
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+
+class UserUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = get_object_or_404(User, email=request.user)
+        serializer = UserProfileSerializer(data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.instance = user
+            serializer.save()
+
+            return Response(
+                {
+                    "status": True,
+                    "message": "Profile Updated Successfully",
+                    "data": serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"status": False, "message": serializer.errors},
+                status=status.HTTP_200_OK,
+            )
+
+
 class UserDetailView(RetrieveAPIView):
     lookup_field = "username"
     permission_classes = (AllowAny,)
     serializer_class = ListUserSerializer
     queryset = User.objects.all()
 
-class UserUpdateView(UpdateAPIView):
-    lookup_field = "email"
-    permission_classes = (IsAuthenticated,)
-    serializer_class = ListUserSerializer
-    queryset = User.objects.all()
-    # parser_classes = (FormParser, MultiPartParser)
 
 class UserDeleteView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -555,6 +622,7 @@ class UserDeleteView(generics.GenericAPIView):
                 {"status": False, "message": "User is not available"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
 
 class ChangePassword(generics.GenericAPIView):
     permission_classes = (IsAuthenticated,)

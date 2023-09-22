@@ -10,10 +10,7 @@ from helper.utils import get_timezone_datetime, designer_required
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import User
-from rest_framework.generics import (
-    RetrieveAPIView,
-    ListAPIView
-)
+from rest_framework.generics import RetrieveAPIView, ListAPIView
 from helper.utils import CustomPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
@@ -44,6 +41,7 @@ from product.models import (
     CreditCard,
     Refunds,
 )
+
 log = logging.getLogger(__name__)
 
 
@@ -62,7 +60,6 @@ class MarketFeedView(ListAPIView):
                 serializer = self.get_serializer(queryset, many=True)
 
         else:
-
             queryset = Product.objects.filter(category=category)
             page = self.paginate_queryset(queryset)
             if page is not None:
@@ -71,21 +68,20 @@ class MarketFeedView(ListAPIView):
                 serializer = self.get_serializer(queryset, many=True)
 
         category_data = {
-                "category": category,
-                "product": serializer.data,
-            }
+            "category": category,
+            "product": serializer.data,
+        }
 
         response_data = {
             "status": True,
             "message": "Products fetched successfully",
             "categoryData": category_data,
-            
         }
         return self.get_paginated_response(response_data)
 
+
 class RefundTransactions(object):
     def __init__(self, charge_id, refund_id=""):
-
         self.charge_id = charge_id
         self.refund_id = refund_id
 
@@ -146,19 +142,21 @@ class RefundTransactions(object):
                     serializer = RefundSerializer(refunds, many=True)
                     return serializer.data
 
+
 class UserIDView(APIView):
     def get(self, request, *args, **kwargs):
         return Response({"userID": request.user.id}, status=HTTP_200_OK)
 
+
 class ProductView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, format=None):
         # Deserialize the request data
         user = request.user
         data = request.POST
         serializer = ProductSerializer(data=data)
-        images = request.FILES.getlist('images')
-        
+        images = request.FILES.getlist("images")
 
         # Validate the data
         if serializer.is_valid():
@@ -167,17 +165,23 @@ class ProductView(APIView):
             for image in images:
                 ProductImage.objects.create(product=product, image=image)
             # Save the product to the database
-            
-            return Response({"status":True,"data":serializer.data}, status=status.HTTP_201_CREATED)
-        return Response({"status":False,"error":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+            return Response(
+                {"status": True, "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(
+            {"status": False, "error": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     def put(self, request, pk, format=None):
         # Retrieve the product instance from the database
         product = get_object_or_404(Product, pk=pk)
-        
+
         # Deserialize the request data and specify the instance to update
         serializer = ProductSerializer(product, data=request.data, partial=True)
-        
+
         # Validate and save the updated product
         if serializer.is_valid():
             serializer.save()
@@ -187,20 +191,20 @@ class ProductView(APIView):
     def delete(self, request, pk, format=None):
         # Retrieve the product instance from the database
         product = get_object_or_404(Product, pk=pk)
-        
+
         # Delete the product
         product.delete()
-        
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-#@method_decorator(designer_required, name='dispatch')
+
+# @method_decorator(designer_required, name='dispatch')
 class UserProdctsView(ListAPIView):
     serializer_class = ProductDetailSerializer
     pagination_class = CustomPagination  # Use the custom pagination class
     permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-
         queryset = Product.objects.filter(owner=request.user)
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -212,28 +216,31 @@ class UserProdctsView(ListAPIView):
             "status": True,
             "message": "Products fetched successfully",
             "data": serializer.data,
-            
         }
 
         return self.get_paginated_response(response_data)
 
+
 class ProductListView(APIView):
     permission_classes = (AllowAny,)
+
     def get(self, request):
         q = request.GET.get("category")
         prod = Product.objects.filter(category=q)
         serializer = ProductSerializer(prod, many=True)
         return Response({"status": True, "data": serializer.data})
 
+
 class ProductDetailView(RetrieveAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ProductDetailSerializer
     queryset = Product.objects.all()
 
+
 class BankView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         data = request.data
         serializer = BankSerializer(data=data)
@@ -250,10 +257,8 @@ class BankView(APIView):
                 {"status": False, "message": serializer.errors},
                 status=status.HTTP_200_OK,
             )
-       
 
     def get(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         bank = get_object_or_404(Bank, user=user)
         serializer = BankSerializer(bank)
@@ -261,10 +266,8 @@ class BankView(APIView):
             {"status": True, "data": serializer.data},
             status=status.HTTP_200_OK,
         )
-        
 
     def put(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         data = request.data
         bank = get_object_or_404(Bank, user=user)
@@ -285,7 +288,6 @@ class BankView(APIView):
             )
 
     def delete(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         bank = get_object_or_404(Bank, user=user)
         bank.delete()
@@ -294,10 +296,11 @@ class BankView(APIView):
             status=status.HTTP_204_NO_CONTENT,
         )
 
+
 class CreditcardView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         data = request.data
         serializer = CreditCardSerializer(data=data)
@@ -316,7 +319,6 @@ class CreditcardView(APIView):
             )
 
     def get(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         crd = get_object_or_404(CreditCard, user=user)
         serializer = CreditCardSerializer(crd)
@@ -324,10 +326,8 @@ class CreditcardView(APIView):
             {"status": True, "data": serializer.data},
             status=status.HTTP_200_OK,
         )
-       
 
     def put(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         data = request.data
         crd = get_object_or_404(CreditCard, user=user)
@@ -348,7 +348,6 @@ class CreditcardView(APIView):
             )
 
     def delete(self, request, *args, **kwargs):
-       
         user = User.objects.filter(email=request.user).first()
         crd = get_object_or_404(CreditCard, user=user)
         crd.delete()
@@ -357,8 +356,10 @@ class CreditcardView(APIView):
             status=status.HTTP_204_NO_CONTENT,
         )
 
+
 class OrderQuantityUpdateView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         user = User.objects.filter(email=request.user).first()
         slug = request.data.get("slug", None)
@@ -390,12 +391,12 @@ class OrderQuantityUpdateView(APIView):
                 {"message": "You do not have an active order"},
                 status=HTTP_200_OK,
             )
-        
+
+
 class OrderItemDeleteView(APIView):
     permission_classes = [IsAuthenticated]
-    def delete(self, request, pk, *args, **kwargs):
 
-        
+    def delete(self, request, pk, *args, **kwargs):
         prod = OrderProduct.objects.get(pk=pk)
         prod.delete()
         return Response(
@@ -403,17 +404,18 @@ class OrderItemDeleteView(APIView):
             status=status.HTTP_204_NO_CONTENT,
         )
 
+
 # class AddToCartView(APIView):
 #     permission_classes = [IsAuthenticated]
 #     def post(self, request, slug, *args, **kwargs):
-        
+
 #         user = User.objects.filter(email=request.user).first()
 #         #slug = request.data.get("slug", None)
 #         variations = request.data.get("variations", [])
 #         qty = request.data.get("quantity", 1)
 #         if slug is None:
 #             return Response({"status":False,
-#                              "message": "Invalid request"}, 
+#                              "message": "Invalid request"},
 #                              status=HTTP_200_OK)
 
 #         product = get_object_or_404(Product, slug=slug)
@@ -473,7 +475,8 @@ class OrderItemDeleteView(APIView):
 #                 {"status": True, "message": "Product added to cart"},
 #                 status=HTTP_200_OK,
 #             )
-        
+
+
 class AddToCartView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -495,7 +498,9 @@ class AddToCartView(APIView):
         if not variations:
             # If no variations are specified, treat it as if there are no variations
             order_product_qs = OrderProduct.objects.filter(
-                product=product, user=user, ordered=False,
+                product=product,
+                user=user,
+                ordered=False,
             )
         else:
             order_product_qs = OrderProduct.objects.filter(
@@ -548,6 +553,7 @@ class AddToCartView(APIView):
                 status=HTTP_200_OK,
             )
 
+
 class OrderDetailView(RetrieveAPIView):
     serializer_class = OrderSerializer
     permission_classes = (IsAuthenticated,)
@@ -559,59 +565,64 @@ class OrderDetailView(RetrieveAPIView):
         except ObjectDoesNotExist:
             raise Http404("You do not have an active order")
 
+
 class OrdersView(APIView):
-    
     permission_classes = [IsAuthenticated]
-    def get(self,request):
-        
-        status = request.GET.get('status')
+
+    def get(self, request):
+        status = request.GET.get("status")
         log.info(status)
         if status is not None:
-            
-            if status == 'delivered':
-                order_items = LineItem.objects.select_related('order').filter(order__user_id=request.user.id, 
-                                                                              order_status='Delivered')
+            if status == "delivered":
+                order_items = LineItem.objects.select_related("order").filter(
+                    order__user_id=request.user.id, order_status="Delivered"
+                )
                 serializer = LineItemIndexSerializer(order_items, many=True)
-                return Response({'order_items': serializer.data})
-            
-            elif status == 'processing':
-                order_items = LineItem.objects.select_related('order').filter(order__user_id=request.user.id, 
-                                                                              order_status='Processing')
-                serializer = LineItemIndexSerializer(order_items, many=True)
-                return Response({'order_items': serializer.data})
-            
-            elif status == 'pending':
-                order_items = LineItem.objects.select_related('order').filter(order__user_id=request.user.id, 
-                                                                              order_status='Pending')
-                serializer= LineItemIndexSerializer(order_items, many=True)
-                return Response({'order_items': serializer.data})
-            
-            elif status == 'shipped':
-                order_items = LineItem.objects.select_related('order').filter(order__user_id=request.user.id, 
-                                                                              order_status='Shipped')
-                serializer= LineItemIndexSerializer(order_items, many=True)
-                return Response({'order_items': serializer.data})
-            
-            elif status == 'dispatched':
-                order_items = LineItem.objects.select_related('order').filter(order__user_id=request.user.id, 
-                                                                              order_status='Dispatched')
-                serializer= LineItemIndexSerializer(order_items, many=True)
-                return Response({'order_items': serializer.data})
-            
-        else:
+                return Response({"order_items": serializer.data})
 
-            order_items = LineItem.objects.select_related('order', 'product').filter(order__user_id=request.user.id)
-            serializer= LineItemIndexSerializer(order_items, many=True)
-            return Response({'order_items': serializer.data})  
+            elif status == "processing":
+                order_items = LineItem.objects.select_related("order").filter(
+                    order__user_id=request.user.id, order_status="Processing"
+                )
+                serializer = LineItemIndexSerializer(order_items, many=True)
+                return Response({"order_items": serializer.data})
+
+            elif status == "pending":
+                order_items = LineItem.objects.select_related("order").filter(
+                    order__user_id=request.user.id, order_status="Pending"
+                )
+                serializer = LineItemIndexSerializer(order_items, many=True)
+                return Response({"order_items": serializer.data})
+
+            elif status == "shipped":
+                order_items = LineItem.objects.select_related("order").filter(
+                    order__user_id=request.user.id, order_status="Shipped"
+                )
+                serializer = LineItemIndexSerializer(order_items, many=True)
+                return Response({"order_items": serializer.data})
+
+            elif status == "dispatched":
+                order_items = LineItem.objects.select_related("order").filter(
+                    order__user_id=request.user.id, order_status="Dispatched"
+                )
+                serializer = LineItemIndexSerializer(order_items, many=True)
+                return Response({"order_items": serializer.data})
+
+        else:
+            order_items = LineItem.objects.select_related("order", "product").filter(
+                order__user_id=request.user.id
+            )
+            serializer = LineItemIndexSerializer(order_items, many=True)
+            return Response({"order_items": serializer.data})
+
 
 class OrderDetailView(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request, *args, **kwargs):
 
+    def get(self, request, *args, **kwargs):
         user = User.objects.filter(email=request.user).first()
         order = Order.objects.filter(user=user, ordered=False)
         if order.exists():
-
             serializer = OrderSerializer(order.first())
             return Response(
                 {"status": True, "data": serializer.data},
@@ -623,11 +634,12 @@ class OrderDetailView(APIView):
                 {"status": False, "message": "You do not have an active order"},
                 status=status.HTTP_200_OK,
             )
-        
+
+
 class PaymentView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
-       
         user = User.objects.filter(email=request.user).first()
         order = Order.objects.get(user=user, ordered=False)
         token = request.data.get("stripeToken")
@@ -654,7 +666,6 @@ class PaymentView(APIView):
         amount = int(order.get_total() * 100)
 
         try:
-
             # charge the customer because we cannot charge the token more than once
             charge = stripe.Charge.create(
                 amount=amount,  # cents
@@ -668,7 +679,7 @@ class PaymentView(APIView):
             #     amount=amount,  # cents
             #     currency="usd",
             #     source=token
-            #)
+            # )
 
             # create the payment
             payment = Payment()
@@ -677,7 +688,7 @@ class PaymentView(APIView):
             payment.amount = order.get_total()
             payment.save()
 
-            #assign the payment to the order
+            # assign the payment to the order
             order_products = order.items.all()
             order_products.update(ordered=True)
             for item in order_products:
@@ -687,47 +698,57 @@ class PaymentView(APIView):
             order.payment = payment
             order.billing_address = billing_address
             order.shipping_address = shipping_address
-            order.ref_code = str(uuid.uuid4().hex)[:10].upper() 
+            order.ref_code = str(uuid.uuid4().hex)[:10].upper()
             order_number = order.save()
             order.set_line_items_from_cart(order, order_number, user)
             order.set_transaction(user, charge, time_range)
 
-
-            return Response( {"status":True,"message": "Payment Succesful"}, status=HTTP_200_OK)
+            return Response(
+                {"status": True, "message": "Payment Succesful"}, status=HTTP_200_OK
+            )
 
         except stripe.error.CardError as e:
             body = e.json_body
             err = body.get("error", {})
             return Response(
-                {"status":False,"message": f"{err.get('message')}"}, status=HTTP_200_OK
+                {"status": False, "message": f"{err.get('message')}"},
+                status=HTTP_200_OK,
             )
 
         except stripe.error.RateLimitError as e:
             # Too many requests made to the API too quickly
             # messages.warning(self.request, "Rate limit error")
-            return Response({"status":False,"message": "Rate limit error"}, status=HTTP_200_OK)
+            return Response(
+                {"status": False, "message": "Rate limit error"}, status=HTTP_200_OK
+            )
 
         except stripe.error.InvalidRequestError as e:
             # print(e)
             # Invalid parameters were supplied to Stripe's API
-            return Response({"status":False,"message": "Invalid parameters"}, status=HTTP_200_OK)
+            return Response(
+                {"status": False, "message": "Invalid parameters"}, status=HTTP_200_OK
+            )
 
         except stripe.error.AuthenticationError as e:
             # Authentication with Stripe's API failed
             # (maybe you changed API keys recently)
-            return Response({"status":False,"message": "Not authenticated"}, status=HTTP_200_OK)
+            return Response(
+                {"status": False, "message": "Not authenticated"}, status=HTTP_200_OK
+            )
 
         except stripe.error.APIConnectionError as e:
             # Network communication with Stripe failed
-            return Response({"status":False,"message": "Network error"}, status=HTTP_200_OK)
+            return Response(
+                {"status": False, "message": "Network error"}, status=HTTP_200_OK
+            )
 
         except stripe.error.StripeError as e:
             # Display a very generic error to the user, and maybe send
             # yourself an email
             return Response(
                 {
-                    "status":False,
-                    "message": "Something went wrong. You were not charged. Please try again."
+                    "status": False,
+                    "message": "Something went wrong. You were not charged. Please try again.",
                 },
                 status=HTTP_200_OK,
             )
@@ -735,25 +756,37 @@ class PaymentView(APIView):
         except Exception as e:
             # send an email to ourselves
             return Response(
-
-                {"status":False,"message": "A serious error occurred. We have been notifed."},
+                {
+                    "status": False,
+                    "message": "A serious error occurred. We have been notifed.",
+                },
                 status=HTTP_200_OK,
             )
 
+
 class OrderStatusView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request, pk):
-       
         cart = OrderProduct.objects.filter(
-                 user=request.user, ordered=True,
-            )
-        order_item = LineItem.objects.select_related('order').filter(order__user_id=request.user.id, pk=pk).first()
+            user=request.user,
+            ordered=True,
+        )
+        order_item = (
+            LineItem.objects.select_related("order")
+            .filter(order__user_id=request.user.id, pk=pk)
+            .first()
+        )
         if order_item != None:
-            context =  {'page_title': 'Order Item #' + str(order_item.id) + ' Status', 'cart':cart, 'order_item': order_item}
-            return Response({'data':context, 'status': True})
+            context = {
+                "page_title": "Order Item #" + str(order_item.id) + " Status",
+                "cart": cart,
+                "order_item": order_item,
+            }
+            return Response({"data": context, "status": True})
         else:
-            return Response({'message':'Invalid Order', 'status': False})
+            return Response({"message": "Invalid Order", "status": False})
+
 
 class Checkout(APIView):
     permission_classes = [IsAuthenticated]
@@ -761,7 +794,9 @@ class Checkout(APIView):
     def post(self, request, *args, **kwargs):
         user = User.objects.filter(email=request.user).first()
         order = Order.objects.get(user=user, ordered=False)
-        payment_method = request.data.get("payment_method")  # New parameter for payment method
+        payment_method = request.data.get(
+            "payment_method"
+        )  # New parameter for payment method
         billing_address_id = request.data.get("BillingAddress")
         shipping_address_id = request.data.get("ShippingAddress")
         billing_address = Address.objects.get(id=billing_address_id)
@@ -770,8 +805,7 @@ class Checkout(APIView):
 
         # Check the selected payment method
         if payment_method == "stripe":
-            token = request.data.get("stripeToken")            
-            
+            token = request.data.get("stripeToken")
 
             if user.stripe_customer_id != "" and user.stripe_customer_id is not None:
                 customer = stripe.Customer.retrieve(user.stripe_customer_id)
@@ -826,11 +860,8 @@ class Checkout(APIView):
                     {"status": False, "message": f"{err.get('message')}"},
                     status=HTTP_200_OK,
                 )
-            
-            
-            
-        elif payment_method == "pay_on_delivery":  # Handle Pay on Delivery
 
+        elif payment_method == "pay_on_delivery":  # Handle Pay on Delivery
             # order_products = order.products.all()
             # # order_products.update(ordered=True)
             # for item in order_products:
@@ -851,8 +882,7 @@ class Checkout(APIView):
             order.save()
 
             return Response(
-                {"status": True, 
-                 "message": "Order placed with Pay on Delivery"},
+                {"status": True, "message": "Order placed with Pay on Delivery"},
                 status=HTTP_200_OK,
             )
 
@@ -862,30 +892,34 @@ class Checkout(APIView):
                 status=HTTP_200_OK,
             )
 
+
 class AddCouponView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
-        
         user = User.objects.filter(email=request.user).first()
         code = request.data.get("code", None)
         if code is None:
             return Response(
-                {"status": False,"message": "Invalid data received"}, status=HTTP_200_OK
+                {"status": False, "message": "Invalid data received"},
+                status=HTTP_200_OK,
             )
         order = Order.objects.get(user=user, ordered=False)
         coupon = get_object_or_404(Coupon, code=code)
         order.coupon = coupon
         order.save()
-        return Response( {"status": True, "message": "Coupon added"},status=HTTP_200_OK)
-       
+        return Response({"status": True, "message": "Coupon added"}, status=HTTP_200_OK)
+
+
 class CountryListView(APIView):
     def get(self, request):
         return Response(countries, status=HTTP_200_OK)
 
+
 class AddressListView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
-       
         address_type = request.query_params.get("address_type", None)
         user = User.objects.filter(email=request.user).first()
         address = Address.objects.filter(user=user, address_type=address_type)
@@ -899,11 +933,12 @@ class AddressListView(APIView):
             },
             status=status.HTTP_200_OK,
         )
-    
+
+
 class AddressCreateView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        
         user = User.objects.filter(email=request.user).first()
         data = request.data
         serializer = AddressSerializer(data=data)
@@ -924,8 +959,10 @@ class AddressCreateView(APIView):
                 status=status.HTTP_200_OK,
             )
 
+
 class AddressUpdateView(APIView):
     permission_classes = [IsAuthenticated]
+
     def put(self, request, pk):
         data = request.data
         address = get_object_or_404(Address, pk=pk)
@@ -949,16 +986,19 @@ class AddressUpdateView(APIView):
                 status=status.HTTP_200_OK,
             )
 
+
 class AddressDeleteView(APIView):
     permission_classes = [IsAuthenticated]
-    def delete(self, request, pk, *args, **kwargs):
 
+    def delete(self, request, pk, *args, **kwargs):
         prod = Address.objects.get(pk=pk)
         prod.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class PaymentListView(APIView):
     permission_classes = [IsAuthenticated]
+
     def put(self, request):
         user = User.objects.filter(email=request.user).first()
         p = Payment.objects.filter(user=user)
