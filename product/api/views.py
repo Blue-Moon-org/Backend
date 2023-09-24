@@ -51,7 +51,7 @@ class MarketFeedView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def list(self, request, category="All", *args, **kwargs):
-        if category == "All" or category == "" :
+        if category == "All" or category == "":
             queryset = Product.objects.all()
             page = self.paginate_queryset(queryset)
             if page is not None:
@@ -793,7 +793,13 @@ class Checkout(APIView):
 
     def post(self, request, *args, **kwargs):
         user = User.objects.filter(email=request.user).first()
-        order = Order.objects.get(user=user, ordered=False)
+        orders = Order.objects.filter(user=user, ordered=False)
+        if not orders:
+            return Response(
+                {"status": False, "message": "Your cart is empty"},
+                status=HTTP_200_OK,
+            )
+        order = orders.first()
         payment_method = request.data.get(
             "payment_method"
         )  # New parameter for payment method
@@ -874,10 +880,10 @@ class Checkout(APIView):
             order.billing_address = billing_address
             order.shipping_address = shipping_address
             order.ref_code = str(uuid.uuid4().hex)[:10].upper()
-            print(order.save())
-            order_number = order.save()
+            # print(order.save())
+            order_number = order.generate_number()
             order.set_line_items_from_cart(order, order_number, user)
-            order.set_transaction(payment_method, user, charge, time_range)
+            order.set_transaction(payment_method, user, time_range)
             # order.payment_method = PaymentMethod.objects.get(name="Pay on Delivery")
             order.save()
 

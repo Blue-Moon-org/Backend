@@ -347,7 +347,7 @@ class Order(models.Model):
                     + str(e)
                 )
 
-    def set_transaction(self, payment_method, user, charge, time_range):
+    def set_transaction(self, payment_method, user, time_range, charge=None, ):
         if payment_method == "stripe":
 
             transaction = Transaction(order=self)
@@ -378,7 +378,7 @@ class Order(models.Model):
             transaction.transaction_id = generate_transaction_id(user.id)
             transaction.time_sent = time_range[0]
             transaction.time_arrived = time_range[1]
-            transaction.amount_paid = charge["amount"]
+            #transaction.amount_paid = charge["amount"]
             transaction.status = "Pending"
             transaction.payment_method = "Pay on Delivery"
             transaction.save()
@@ -392,6 +392,7 @@ class Order(models.Model):
         return total
 
     def generate_number(self):
+       
         last_order = Order.objects.last()
         number = "BM" + str((last_order.id if last_order is not None else 0) + 1).rjust(
             10, "0"
@@ -399,12 +400,12 @@ class Order(models.Model):
         self.number = number
         return number
 
-    def save(self, *args, **kwargs):
-        number = None
-        if not self.pk:
-            number = self.generate_number()
-        super().save(*args, **kwargs)
-        return number
+    # def save(self, *args, **kwargs):
+    #     number = None
+    #     if not self.pk:
+    #         number = self.generate_number()
+    #     super().save(*args, **kwargs)
+    #     return number
 
 
 class Refunds(models.Model):

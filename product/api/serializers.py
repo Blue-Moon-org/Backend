@@ -282,9 +282,9 @@ class OrderUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id',
                   'email', 
-                  'phone_number', 
+                  'phone', 
                   'fullname', 
-                  'user_type',
+                  'account_type',
                   ]
 
 class LineItemIndexSerializer(serializers.ModelSerializer):
@@ -301,6 +301,5 @@ class LineItemIndexSerializer(serializers.ModelSerializer):
                   'price',
                   'tracking_number', 
                   'quantity', 
-                  'tracking_number', 
                   'order_status',
                   ]
