@@ -51,7 +51,7 @@ class MarketFeedView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def list(self, request, category="All", *args, **kwargs):
-        if category == "All":
+        if category == "All" or category == "" :
             queryset = Product.objects.all()
             page = self.paginate_queryset(queryset)
             if page is not None:
