@@ -39,6 +39,7 @@ class Notification(models.Model):
         ("F", "follow"),  # when someone follows you*
         ("UF", "unfollow"),  # when someone unfollows you*
         ("CT", "chat"),  # when someone chats you
+        ("NO", "new_order"),  # when someone order your product
     )
 
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="create")

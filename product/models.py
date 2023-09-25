@@ -1,5 +1,5 @@
 from django.db import models
-from django.shortcuts import reverse
+from django.shortcuts import get_object_or_404, reverse
 from django.utils.text import slugify
 from django_countries.fields import CountryField
 
@@ -13,6 +13,7 @@ from stripe import BalanceTransaction
 import logging
 
 from helper.utils import CATEGORY, generate_transaction_id
+from notification.models import Notification
 log = logging.getLogger(__name__)
 
 stripe.api_key = config("STRIPE_SECRET_KEY") 
@@ -390,6 +391,17 @@ class Order(models.Model):
         if self.coupon:
             total -= self.coupon.amount
         return total
+    
+    def notify_owner(self, from_user, to_user):
+        
+        notify = Notification.objects.create(
+            notification_type="NO",
+            comments=f"You have a new order from @{from_user.firstname}",
+            to_user=to_user,
+            from_user=from_user,
+        )
+        notify.save()
+        return
 
     def generate_number(self):
        

@@ -207,6 +207,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "account_type",
+            "firstname",
+            "lastname",
             "fullname",
             "call_code",
             "phone",

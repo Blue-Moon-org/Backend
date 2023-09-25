@@ -19,6 +19,7 @@ from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 from .serializers import (
     LineItemIndexSerializer,
+    MyLineItemIndexSerializer,
     ProductSerializer,
     OrderSerializer,
     ProductDetailSerializer,
@@ -566,54 +567,70 @@ class OrderDetailView(RetrieveAPIView):
             raise Http404("You do not have an active order")
 
 
-class OrdersView(APIView):
+class OrdersView(ListAPIView):
+    serializer_class = LineItemIndexSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        status = request.GET.get("status")
-        log.info(status)
+    def get_queryset(self):
+        status = self.request.GET.get("status")
+        user = self.request.user
+
         if status is not None:
-            if status == "delivered":
-                order_items = LineItem.objects.select_related("order").filter(
-                    order__user_id=request.user.id, order_status="Delivered"
-                )
-                serializer = LineItemIndexSerializer(order_items, many=True)
-                return Response({"order_items": serializer.data})
-
-            elif status == "processing":
-                order_items = LineItem.objects.select_related("order").filter(
-                    order__user_id=request.user.id, order_status="Processing"
-                )
-                serializer = LineItemIndexSerializer(order_items, many=True)
-                return Response({"order_items": serializer.data})
-
-            elif status == "pending":
-                order_items = LineItem.objects.select_related("order").filter(
-                    order__user_id=request.user.id, order_status="Pending"
-                )
-                serializer = LineItemIndexSerializer(order_items, many=True)
-                return Response({"order_items": serializer.data})
-
-            elif status == "shipped":
-                order_items = LineItem.objects.select_related("order").filter(
-                    order__user_id=request.user.id, order_status="Shipped"
-                )
-                serializer = LineItemIndexSerializer(order_items, many=True)
-                return Response({"order_items": serializer.data})
-
-            elif status == "dispatched":
-                order_items = LineItem.objects.select_related("order").filter(
-                    order__user_id=request.user.id, order_status="Dispatched"
-                )
-                serializer = LineItemIndexSerializer(order_items, many=True)
-                return Response({"order_items": serializer.data})
-
-        else:
-            order_items = LineItem.objects.select_related("order", "product").filter(
-                order__user_id=request.user.id
+            queryset = LineItem.objects.select_related("order").filter(
+                order__user=user, order_status=status.capitalize()
             )
-            serializer = LineItemIndexSerializer(order_items, many=True)
-            return Response({"order_items": serializer.data})
+        else:
+            queryset = LineItem.objects.select_related("order", "product").filter(
+                order__user=user
+            )
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response({"order_items": serializer.data})
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"order_items": serializer.data})
+
+
+class MyOrdersView(ListAPIView):
+    serializer_class = MyLineItemIndexSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        status = self.request.GET.get("status")
+        user = self.request.user
+
+        if status is not None:
+            queryset = LineItem.objects.select_related("order").filter(
+                order__products__owner=user, order_status=status.capitalize()
+            )
+        else:
+            queryset = LineItem.objects.select_related("order", "product").filter(
+                order__products__product__owner=user
+            )
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response({"order_items": serializer.data})
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"order_items": serializer.data})
+    
+
 
 
 class OrderDetailView(APIView):
@@ -868,14 +885,14 @@ class Checkout(APIView):
                 )
 
         elif payment_method == "pay_on_delivery":  # Handle Pay on Delivery
-            # order_products = order.products.all()
+            order_products = order.products.all()
             # # order_products.update(ordered=True)
-            # for item in order_products:
+            
             #     item.save()
             time_arrived = get_timezone_datetime()
             time_range = [time_sent, time_arrived]
 
-            order.ordered = True
+            
             # order.payment = payment
             order.billing_address = billing_address
             order.shipping_address = shipping_address
@@ -884,7 +901,10 @@ class Checkout(APIView):
             order_number = order.generate_number()
             order.set_line_items_from_cart(order, order_number, user)
             order.set_transaction(payment_method, user, time_range)
-            # order.payment_method = PaymentMethod.objects.get(name="Pay on Delivery")
+            order.ordered = True
+            for item in order_products:
+                to_user = User.objects.filter(email=item.product.owner.email).first()
+                order.notify_owner(from_user=user, to_user=to_user)
             order.save()
 
             return Response(

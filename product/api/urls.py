@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     Checkout,
     MarketFeedView,
+    MyOrdersView,
     OrderStatusView,
     OrdersView,
     ProductView,
@@ -49,6 +50,7 @@ urlpatterns = [
     path("checkout/", Checkout.as_view(), name="checkout"),
     path("add-coupon/", AddCouponView.as_view(), name="add-coupon"),
     path("orders/get_orders/", OrdersView.as_view()),
+    path("orders/get_my_orders/", MyOrdersView.as_view()),
     path(
         "order-items/<pk>/delete/",
         OrderItemDeleteView.as_view(),

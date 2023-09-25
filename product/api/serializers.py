@@ -18,14 +18,17 @@ from product.models import (
     Refunds,
 )
 
+
 class StringSerializer(serializers.StringRelatedField):
     def to_internal_value(self, value):
         return value
+
 
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coupon
         fields = ("id", "code", "amount")
+
 
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.fullname")
@@ -53,6 +56,7 @@ class ProductSerializer(serializers.ModelSerializer):
     # def get_label(self, obj):
     #     return obj.get_label_display()
 
+
 class VariationDetailSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField()
 
@@ -62,6 +66,7 @@ class VariationDetailSerializer(serializers.ModelSerializer):
 
     def get_product(self, obj):
         return ProductSerializer(obj.product).data
+
 
 class ProductVariationDetailSerializer(serializers.ModelSerializer):
     variation = serializers.SerializerMethodField()
@@ -73,6 +78,7 @@ class ProductVariationDetailSerializer(serializers.ModelSerializer):
     def get_variation(self, obj):
         return VariationDetailSerializer(obj.variation).data
 
+
 class OrderProductSerializer(serializers.ModelSerializer):
     product_variations = serializers.SerializerMethodField()
     product = serializers.SerializerMethodField()
@@ -80,12 +86,14 @@ class OrderProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderProduct
-        fields = ("id", 
-                  "product", 
-                  "product_variations", 
-                  "quantity", 
-                  "dimension",
-                  "final_price")
+        fields = (
+            "id",
+            "product",
+            "product_variations",
+            "quantity",
+            "dimension",
+            "final_price",
+        )
 
     def get_product(self, obj):
         return ProductSerializer(obj.product).data
@@ -97,6 +105,7 @@ class OrderProductSerializer(serializers.ModelSerializer):
 
     def get_final_price(self, obj):
         return obj.get_final_price()
+
 
 class CreditCardSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.nickname")
@@ -113,12 +122,14 @@ class CreditCardSerializer(serializers.ModelSerializer):
             "fullname",
         ]
 
+
 class BankSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.nickname")
 
     class Meta:
         model = Bank
         fields = ["user", "account_number", "bank", "fullname"]
+
 
 class OrderSerializer(serializers.ModelSerializer):
     order_products = serializers.SerializerMethodField()
@@ -140,10 +151,15 @@ class OrderSerializer(serializers.ModelSerializer):
             return CouponSerializer(obj.coupon).data
         return None
 
+
+
+
+
 class ProductVariationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductVariation
         fields = ("id", "value", "attachment")
+
 
 class VariationSerializer(serializers.ModelSerializer):
     product_variations = serializers.SerializerMethodField()
@@ -157,11 +173,12 @@ class VariationSerializer(serializers.ModelSerializer):
             obj.productvariation_set.all(), many=True
         ).data
 
-class ProductImagesSerializer(serializers.ModelSerializer):
 
+class ProductImagesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ["image"]
+
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.fullname")
@@ -169,7 +186,9 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     label = serializers.SerializerMethodField()
     variations = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField(method_name="get_images")
-    user_has_carted = serializers.SerializerMethodField(method_name="get_user_has_carted")
+    user_has_carted = serializers.SerializerMethodField(
+        method_name="get_user_has_carted"
+    )
 
     class Meta:
         model = Product
@@ -189,9 +208,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         )
 
     def get_images(self, obj):
-        data = ProductImagesSerializer(ProductImage.objects.filter(product=obj.id), many=True).data
+        data = ProductImagesSerializer(
+            ProductImage.objects.filter(product=obj.id), many=True
+        ).data
         return data
-    
+
     def get_category(self, obj):
         return obj.get_category_display()
 
@@ -200,13 +221,15 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     def get_variations(self, obj):
         return VariationSerializer(obj.variation_set.all(), many=True).data
-    
+
     def get_user_has_carted(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            
-            return Order.objects.filter(user=request.user, ordered=False, products__product_id=obj.id).exists()
+            return Order.objects.filter(
+                user=request.user, ordered=False, products__product_id=obj.id
+            ).exists()
         return False
+
 
 class AddressSerializer(serializers.ModelSerializer):
     country = CountryField()
@@ -225,10 +248,12 @@ class AddressSerializer(serializers.ModelSerializer):
             "default",
         )
 
+
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = ("id", "amount", "timestamp")
+
 
 class NewRefundSerializer(serializers.ModelSerializer):
     class Meta:
@@ -242,6 +267,7 @@ class NewRefundSerializer(serializers.ModelSerializer):
             "refund_reason",
             "status",
         ]
+
 
 class RefundSerializer(serializers.ModelSerializer):
     class Meta:
@@ -258,6 +284,7 @@ class RefundSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -270,47 +297,80 @@ class ReviewSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+
 class LineItemProductSerializer(serializers.ModelSerializer):
     reviews = serializers.SerializerMethodField(method_name="get_reviews")
 
     class Meta:
         model = Product
-        fields = ('id', 
-                'title', 
-                'description',
-                'price', 
-                'category', 
-                'slug', 
-                'images', 
-                'reviews')
-        
+        fields = (
+            "id",
+            "title",
+            "description",
+            "price",
+            "category",
+            "slug",
+            "images",
+            "reviews",
+        )
+
     def get_reviews(self, obj):
         data = ReviewSerializer(Review.objects.filter(product=obj.id), many=True).data
         return data
 
+
 class OrderUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id',
-                  'email', 
-                  'phone', 
-                  'fullname', 
-                  'account_type',
-                  ]
+        fields = [
+            "id",
+            "email",
+            "phone",
+            "fullname",
+            "account_type",
+        ]
+
 
 class LineItemIndexSerializer(serializers.ModelSerializer):
     user = OrderUserSerializer(many=False)
-
     order = OrderSerializer(many=False)
     product = ProductSerializer(many=False)
+
     class Meta:
         model = LineItem
-        fields = ['id', 
-                  'user',
-                  'order', 
-                  'product', 
-                  'price',
-                  'tracking_number', 
-                  'quantity', 
-                  'order_status',
-                  ]
+        fields = [
+            "id",
+            "user",
+            "order",
+            "product",
+            "price",
+            "tracking_number",
+            "quantity",
+            "order_status",
+        ]
+
+
+class MyLineItemIndexSerializer(serializers.ModelSerializer):
+    order_products = serializers.SerializerMethodField()
+    user = OrderUserSerializer(many=False)
+    order = OrderSerializer(many=False)
+
+    class Meta:
+        model = LineItem
+        fields = [
+            "id",
+            "user",
+            "order",
+            "order_products",
+            "tracking_number",
+            "quantity",
+            "order_status",
+        ]
+
+    def get_order_products(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return OrderProductSerializer(
+                obj.order.products.filter(product__owner_id=request.user.id), many=True
+            ).data
+        else: return []
