@@ -164,6 +164,7 @@ class ProductImagesSerializer(serializers.ModelSerializer):
         fields = ["image"]
 
 class ProductDetailSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source="owner.fullname")
     category = serializers.SerializerMethodField()
     label = serializers.SerializerMethodField()
     variations = serializers.SerializerMethodField()
@@ -173,6 +174,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id",
+            "owner",
             "title",
             "price",
             "discount_price",
