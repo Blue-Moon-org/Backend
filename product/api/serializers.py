@@ -169,6 +169,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     label = serializers.SerializerMethodField()
     variations = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField(method_name="get_images")
+    user_has_carted = serializers.SerializerMethodField(method_name="get_user_has_carted")
 
     class Meta:
         model = Product
@@ -184,6 +185,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "variations",
+            "user_has_carted",
         )
 
     def get_images(self, obj):
@@ -198,6 +200,13 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     def get_variations(self, obj):
         return VariationSerializer(obj.variation_set.all(), many=True).data
+    
+    def get_user_has_carted(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            
+            return Order.objects.filter(user=request.user, ordered=False, products__product_id=obj.id).exists()
+        return False
 
 class AddressSerializer(serializers.ModelSerializer):
     country = CountryField()
