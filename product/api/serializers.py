@@ -32,6 +32,7 @@ class CouponSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.fullname")
+    images = serializers.SerializerMethodField(method_name="get_images")
     # category = serializers.SerializerMethodField()
     # label = serializers.SerializerMethodField()
 
@@ -42,6 +43,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "title",
             "price",
             "owner",
+            "images",
             "discount_price",
             "category",
             "label",
@@ -50,11 +52,13 @@ class ProductSerializer(serializers.ModelSerializer):
             "timestamp",
         )
 
-    # def get_category(self, obj):
-    #     return obj.get_category_display()
+    def get_images(self, obj):
+        data = ProductImagesSerializer(
+            ProductImage.objects.filter(product=obj.id), many=True
+        ).data
+        return data
 
-    # def get_label(self, obj):
-    #     return obj.get_label_display()
+
 
 
 class VariationDetailSerializer(serializers.ModelSerializer):
