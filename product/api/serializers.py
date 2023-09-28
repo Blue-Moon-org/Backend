@@ -59,8 +59,6 @@ class ProductSerializer(serializers.ModelSerializer):
         return data
 
 
-
-
 class VariationDetailSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField()
 
@@ -154,9 +152,6 @@ class OrderSerializer(serializers.ModelSerializer):
         if obj.coupon is not None:
             return CouponSerializer(obj.coupon).data
         return None
-
-
-
 
 
 class ProductVariationSerializer(serializers.ModelSerializer):
@@ -377,4 +372,5 @@ class MyLineItemIndexSerializer(serializers.ModelSerializer):
             return OrderProductSerializer(
                 obj.order.products.filter(product__owner_id=request.user.id), many=True
             ).data
-        else: return []
+        else:
+            return []

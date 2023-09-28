@@ -116,7 +116,6 @@ class VerifyEmail(generics.GenericAPIView):
                         "email": user.email,
                         "username": user.username,
                         "phone": user.phone,
-                        "slug": user.slug,
                         "refresh_token": refresh_token,
                         "access_token": access_token,
                     },
@@ -426,15 +425,13 @@ class FollowUnfollowUser(APIView):
                 from_user=user,
             )
         notify.save()
-        
+
         return Response(
             {
                 "following": following,
             },
             status=status.HTTP_201_CREATED,
         )
-
-
 
 
 class AddToNotify(APIView):
@@ -449,19 +446,18 @@ class AddToNotify(APIView):
             user_added = False
             user.users_notify.remove(fu_user)
             user.save()
-            
+
         else:
             user_added = True
             user.users_notify.add(fu_user)
             user.save()
-        
+
         return Response(
             {
                 "user_added": user_added,
             },
             status=status.HTTP_201_CREATED,
         )
-
 
 
 # @api_view(["POST"])
