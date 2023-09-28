@@ -275,7 +275,7 @@ class OrderProduct(models.Model):
 
 
 class Order(models.Model):
-    number = models.CharField(max_length=32, editable=False, null=False, unique=True)
+    number = models.CharField(max_length=32, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     ref_code = models.CharField(max_length=20, blank=True, null=True)
     products = models.ManyToManyField(OrderProduct)
