@@ -179,12 +179,19 @@ class ProductImagesSerializer(serializers.ModelSerializer):
         fields = ["image"]
 
 
+class RantingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ["rating"]
+
+
 class ProductDetailSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.fullname")
     category = serializers.SerializerMethodField()
     label = serializers.SerializerMethodField()
     variations = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField(method_name="get_images")
+    rating = serializers.SerializerMethodField(method_name="get_ratings")
     user_has_carted = serializers.SerializerMethodField(
         method_name="get_user_has_carted"
     )
@@ -198,6 +205,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "price",
             "discount_price",
             "category",
+            "rating",
             "images",
             "label",
             "slug",
@@ -211,6 +219,16 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             ProductImage.objects.filter(product=obj.id), many=True
         ).data
         return data
+
+    def get_ratings(self, obj):
+        reviews = Review.objects.filter(product=obj)
+        num_reviews = len(reviews)
+        
+        if num_reviews == 0:
+            return 0  # Return 0 if there are no reviews
+        total_rating = sum([review.rating for review in reviews])
+        avg_rating = total_rating / num_reviews
+        return avg_rating
 
     def get_category(self, obj):
         return obj.get_category_display()
@@ -285,12 +303,15 @@ class RefundSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.fullname")
+
     class Meta:
         model = Review
         fields = [
             "id",
             "product",
             "user",
+            "rating",
             "review",
             "created_at",
             "updated_at",

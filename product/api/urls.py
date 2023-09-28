@@ -6,6 +6,8 @@ from .views import (
     OrderStatusView,
     OrdersView,
     ProductView,
+    ReviewList,
+    ReviewView,
     UserIDView,
     ProductListView,
     ProductDetailView,
@@ -62,4 +64,6 @@ urlpatterns = [
         name="order-item-update-quantity",
     ),
     path("payments/", PaymentListView.as_view(), name="payment-list"),
+    path("review/create/", ReviewView.as_view(), name="create-review"),
+    path('reviews/<int:pk>/', ReviewList.as_view(), name='review-list'),
 ]

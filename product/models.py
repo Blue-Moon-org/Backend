@@ -14,9 +14,10 @@ import logging
 
 from helper.utils import CATEGORY, generate_transaction_id
 from notification.models import Notification
+
 log = logging.getLogger(__name__)
 
-stripe.api_key = config("STRIPE_SECRET_KEY") 
+stripe.api_key = config("STRIPE_SECRET_KEY")
 
 ORDER_TRACKING_CHOICES = (
     ("Pending", "Pending"),
@@ -25,8 +26,7 @@ ORDER_TRACKING_CHOICES = (
     ("Shipped", "Shipped"),
     ("Delivered", "Delivered"),
 )
-CURRENCY_OPTIONS = (("usd", "USD"),
-                    ("ngn", "NGN"))
+CURRENCY_OPTIONS = (("usd", "USD"), ("ngn", "NGN"))
 
 LABEL_CHOICES = (("P", "primary"), ("S", "secondary"), ("D", "danger"))
 
@@ -83,6 +83,7 @@ class InitiateTransaction(object):
             source=self.stripe_order_token,
         )
 
+
 # class Address(models.Model):
 #     user =  models.ForeignKey(User,default=None, on_delete=models.CASCADE)
 #     first_name = models.CharField(max_length=255, null=False, default='N/A')
@@ -99,8 +100,11 @@ class InitiateTransaction(object):
 #     created_at = models.DateTimeField(default= timezone.now)
 #     updated_at = models.DateTimeField(default= timezone.now)
 
+
 class Address(models.Model):
-    user = models.ForeignKey(User, related_name="user_address", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, related_name="user_address", on_delete=models.CASCADE
+    )
     street_address = models.CharField(max_length=100, null=True)
     apartment_address = models.CharField(max_length=100, null=True, blank=True)
     country = CountryField(multiple=False)
@@ -166,7 +170,9 @@ class Product(models.Model):
     label = models.CharField(choices=LABEL_CHOICES, max_length=1, null=True)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
-    owner = models.ForeignKey(User, related_name="owner_products", on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        User, related_name="owner_products", on_delete=models.CASCADE
+    )
     stock = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     # image = models.ImageField(upload_to='product_images/')
     initial_stock = models.IntegerField(validators=[MinValueValidator(0)], default=0)
@@ -203,8 +209,11 @@ class Product(models.Model):
 
 
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product, related_name='prodcut_images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='product_images/')
+    product = models.ForeignKey(
+        Product, related_name="prodcut_images", on_delete=models.CASCADE
+    )
+    image = models.ImageField(upload_to="product_images/")
+
 
 class Variation(models.Model):
     product = models.ForeignKey(
@@ -252,7 +261,7 @@ class OrderProduct(models.Model):
 
     def get_total_discount_item_price(self):
         if self.dimension is not None and self.dimension > 0:
-            return self.dimension* self.quantity * self.product.discount_price
+            return self.dimension * self.quantity * self.product.discount_price
         else:
             return self.quantity * self.product.discount_price
 
@@ -314,7 +323,6 @@ class Order(models.Model):
         return self.transaction_set.first()
 
     def set_line_items_from_cart(self, cart, order_number, buyer):
-
         for item in cart.products.all():
             try:
                 line_item = LineItem(
@@ -348,9 +356,14 @@ class Order(models.Model):
                     + str(e)
                 )
 
-    def set_transaction(self, payment_method, user, time_range, charge=None, ):
+    def set_transaction(
+        self,
+        payment_method,
+        user,
+        time_range,
+        charge=None,
+    ):
         if payment_method == "stripe":
-
             transaction = Transaction(order=self)
             transaction.customer = user
             transaction.transaction_id = charge["id"]
@@ -361,10 +374,11 @@ class Order(models.Model):
             transaction.currency = charge["currency"]
             transaction.receipt_url = charge["receipt_url"]
             transaction.payment_method = charge["payment_method"].split("_")[0]
-           
 
             if charge["currency"] == "usd":
-                exchange_rate_fee = transaction.ExchangeRate.get_exchange_rate_and_fee(charge)
+                exchange_rate_fee = transaction.ExchangeRate.get_exchange_rate_and_fee(
+                    charge
+                )
                 if exchange_rate_fee["status"]:
                     transaction.exchange_rate = exchange_rate_fee["exchange_rate"]
                     transaction.transaction_fee = exchange_rate_fee["transaction_fee"]
@@ -379,7 +393,7 @@ class Order(models.Model):
             transaction.transaction_id = generate_transaction_id(user.id)
             transaction.time_sent = time_range[0]
             transaction.time_arrived = time_range[1]
-            #transaction.amount_paid = charge["amount"]
+            # transaction.amount_paid = charge["amount"]
             transaction.status = "Pending"
             transaction.payment_method = "Pay on Delivery"
             transaction.save()
@@ -391,9 +405,8 @@ class Order(models.Model):
         if self.coupon:
             total -= self.coupon.amount
         return total
-    
+
     def notify_owner(self, from_user, to_user):
-        
         notify = Notification.objects.create(
             notification_type="NO",
             comments=f"You have a new order from @{from_user.firstname}",
@@ -404,7 +417,6 @@ class Order(models.Model):
         return
 
     def generate_number(self):
-       
         last_order = Order.objects.last()
         number = "BM" + str((last_order.id if last_order is not None else 0) + 1).rjust(
             10, "0"
@@ -421,7 +433,6 @@ class Order(models.Model):
 
 
 class Refunds(models.Model):
-
     customer = models.CharField(max_length=250, editable=False, null=False, blank=False)
     refund_id = models.CharField(max_length=250, editable=False, null=False)
     amount = models.DecimalField(
@@ -442,7 +453,6 @@ class Refunds(models.Model):
 
 
 class OrderTracking(models.Model):
-
     tracking_number = models.CharField(max_length=250, default="", unique=True)
     order_created_at = models.CharField(max_length=250, default="")
     processed_at = models.CharField(max_length=250, default="")
@@ -459,13 +469,10 @@ class OrderTracking(models.Model):
 
 
 class Transaction(models.Model):
-
     customer = models.ForeignKey(
         User, default=None, blank=False, on_delete=models.CASCADE, null=False
     )
-    transaction_id = models.CharField(
-        max_length=32, editable=False, null=False
-    )
+    transaction_id = models.CharField(max_length=32, editable=False, null=False)
     time_sent = models.DateTimeField(null=True, blank=True)
     time_arrived = models.DateTimeField(null=True, blank=True)
     order = models.ForeignKey(Order, default=None, on_delete=models.CASCADE)
@@ -500,7 +507,7 @@ class Transaction(models.Model):
     receipt_url = models.CharField(
         max_length=250, editable=False, null=True, blank=True
     )
-    #status = models.CharField(max_length=32, editable=False, null=True, blank=True)
+    # status = models.CharField(max_length=32, editable=False, null=True, blank=True)
     status = models.CharField(max_length=132, choices=PAYMENT_STATUS, default="Pending")
 
     def card_number_last_4(self):
@@ -567,15 +574,15 @@ class LineItem(models.Model):
 
 class Review(models.Model):
     product = models.ForeignKey(
-        Product, null=True, default=None, on_delete=models.CASCADE
+        Product, related_name="product_review", on_delete=models.CASCADE
     )
-    user = models.ForeignKey(User, default=None, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     review = models.CharField(max_length=500, default=None)
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Refund(models.Model):

@@ -28,6 +28,7 @@ from .serializers import (
     BankSerializer,
     PaymentSerializer,
     RefundSerializer,
+    ReviewSerializer,
 )
 from product.models import (
     LineItem,
@@ -41,6 +42,7 @@ from product.models import (
     Bank,
     CreditCard,
     Refunds,
+    Review,
 )
 
 log = logging.getLogger(__name__)
@@ -198,7 +200,46 @@ class ProductView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class ReviewList(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ReviewSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
 
+    def list(self, request, pk, *args, **kwargs):
+        # print(request.build_absolute_uri())
+        queryset = Review.objects.filter(id=pk)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+        response_data = {
+            "status": True,
+            "message": "reviws fetched successfully",
+            "reviews": serializer.data,
+            
+        }
+        return self.get_paginated_response(response_data)
+
+class ReviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        
+        user = request.user
+        data = request.data
+        serializer = ReviewSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(user=user)
+
+            return Response(
+                {"status": True, "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(
+            {"status": False, "error": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 # @method_decorator(designer_required, name='dispatch')
 class UserProdctsView(ListAPIView):
     serializer_class = ProductDetailSerializer
