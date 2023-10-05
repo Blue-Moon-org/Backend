@@ -3,6 +3,7 @@
 
 # Ignore the virtual environment directory
 env/
+local/
 
 # Ignore Migration files
 migrations/

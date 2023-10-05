@@ -79,11 +79,11 @@ class RegisterView(generics.GenericAPIView):
 
             else:
                 return Response(
-                    {"status": False, "message": serializer.errors},
+                    {"error":{"status": False, "message": "Email or phone number is required"}},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         return Response(
-            {"status": False, "message": "Email already exists"},
+            {"error":{"status": False, "message": "Email already exists"}},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
