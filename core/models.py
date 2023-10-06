@@ -59,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # cover = models.ImageField(upload_to=upload_for, blank=True, null=True)
     stripe_charge_id = models.CharField(max_length=50, default="")
     image = models.ImageField(upload_to="profile/", blank=True, null=True)
+    brand_image = models.ImageField(upload_to="brand/", blank=True, null=True)
 
     account_type = models.CharField(max_length=9,
                   choices=TYPES,

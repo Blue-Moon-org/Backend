@@ -79,11 +79,16 @@ class RegisterView(generics.GenericAPIView):
 
             else:
                 return Response(
-                    {"error":{"status": False, "message": "Email or phone number is required"}},
+                    {
+                        "error": {
+                            "status": False,
+                            "message": "Email or phone number is required",
+                        }
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         return Response(
-            {"error":{"status": False, "message": "Email already exists"}},
+            {"error": {"status": False, "message": "Email already exists"}},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -124,7 +129,7 @@ class VerifyEmail(generics.GenericAPIView):
             )
         else:
             return Response(
-                {"status": False, "message": serializer.errors},
+                {"error": {"status": False, "message": "OTP is invalid"}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -135,11 +140,32 @@ class LoginAPIView(generics.GenericAPIView):
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user_data = serializer.data
-        user = UserProfileSerializer(User.objects.get(email=user_data["email"])).data
-        data = {"tokens": user_data["tokens"], "user_data": user}
-        return Response({"status": True, "data": data}, status=status.HTTP_200_OK)
+
+        if serializer.is_valid():
+            user_data = serializer.validated_data
+            user = UserProfileSerializer(
+                User.objects.get(email=user_data["email"])
+            ).data
+            data = {"tokens": user_data["tokens"], "user_data": user}
+            return Response({"status": True, "data": data}, status=status.HTTP_200_OK)
+        else:
+            return Response(
+                {"error": {"status": False, "message": "Email or password incorrect"}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+# class LoginAPIView(generics.GenericAPIView):
+#     permission_classes = (permissions.AllowAny,)
+#     serializer_class = LoginSerializer
+
+#     def post(self, request):
+#         serializer = LoginSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user_data = serializer.data
+#         user = UserProfileSerializer(User.objects.get(email=user_data["email"])).data
+#         data = {"tokens": user_data["tokens"], "user_data": user}
+#         return Response({"status": True, "data": data}, status=status.HTTP_200_OK)
 
 
 class ResetPasswordAPIView(generics.GenericAPIView):
@@ -175,7 +201,7 @@ class ResetPasswordAPIView(generics.GenericAPIView):
             )
         else:
             return Response(
-                {"status": False, "message": "Invalid email address."},
+                {"error": {"status": False, "message": "Invalid email address."}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -224,7 +250,7 @@ class ResendOtpAPIView(generics.GenericAPIView):
             )
         else:
             return Response(
-                {"status": False, "message": "Invalid email address."},
+                {"error": {"status": False, "message": "Invalid email address."}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -261,7 +287,7 @@ class PhoneVerifyAPIView(generics.GenericAPIView):
             )
         else:
             return Response(
-                {"status": False, "message": "Invalid email address."},
+                {"error": {"status": False, "message": "Invalid email address."}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -305,7 +331,7 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(
-            {"success": True, "message": "Password has been reset successfully."},
+            {"status": True, "message": "Password has been reset successfully."},
             status=status.HTTP_200_OK,
         )
 
@@ -494,7 +520,7 @@ class UserProfile(APIView):
 
         if found_user is None:
             return Response(
-                {"status": False, "message": "User not found"},
+                {"error": {"status": False, "message": "User not found"}},
                 status=status.HTTP_404_NOT_FOUND,
             )
 

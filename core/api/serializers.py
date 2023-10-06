@@ -141,7 +141,6 @@ class VerifyOTPResetSerializer(serializers.Serializer):
             "id": user.id,
             "email": user.email,
             "username": user.username,
-            "slug": user.slug,
         }
 
 
@@ -207,6 +206,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "account_type",
+            "brand_name",
+            "brand_image",
             "firstname",
             "lastname",
             "fullname",
@@ -275,6 +276,7 @@ class LoginSerializer(serializers.ModelSerializer):
 
 
 class ListUserSerializer(serializers.ModelSerializer):
+    is_following = serializers.SerializerMethodField()
     class Meta:
         model = User
         fields = (
@@ -297,8 +299,17 @@ class ListUserSerializer(serializers.ModelSerializer):
             "followers",
             "following_count",
             "following",
+            "is_following",
             "is_verified",
             "is_active",
             "active",
             "created",
         )
+    def get_is_following(self, user):
+        if "request" in self.context:
+            request = self.context["request"]
+            if request.user.id in user.following.all():
+                return True
+            else:
+                return False
+        return False
