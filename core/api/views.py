@@ -37,6 +37,40 @@ from helper.utils import Util
 from twilio.rest import Client
 
 
+class CheckEmailView(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request, email):
+        if not User.objects.filter(email=email).exists():
+            return Response(
+                {"status": True, "message": "Email is available"},
+                status=status.HTTP_200_OK,
+            )
+
+        else:
+            return Response(
+                {"error": {"status": False, "message": "Email already exists"}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class CheckPhoneView(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request, phone):
+        if not User.objects.filter(email=phone).exists():
+            return Response(
+                {"status": True, "message": "Phone number is available"},
+                status=status.HTTP_200_OK,
+            )
+
+        else:
+            return Response(
+                {"error": {"status": False, "message": "Phone number already exists"}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
 class RegisterView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
