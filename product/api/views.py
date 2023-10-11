@@ -31,6 +31,7 @@ from .serializers import (
     ReviewSerializer,
 )
 from product.models import (
+    ORDER_TRACKING_CHOICES,
     LineItem,
     Product,
     OrderProduct,
@@ -639,6 +640,32 @@ class OrdersView(ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response({"order_items": serializer.data})
 
+
+class UpdateOrderStatusView(APIView):
+    def put(self, request, id):
+        try:
+            line_item = LineItem.objects.get(id=id)
+        except LineItem.DoesNotExist:
+            return Response(
+                {"error": {"status": False, "message": "LineItem not found"}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        new_order_status = request.data.get("order_status")
+
+        if new_order_status in [choice[0] for choice in ORDER_TRACKING_CHOICES]:
+            line_item.order_status = new_order_status
+            line_item.save()
+            serializer = LineItemIndexSerializer(line_item)
+            return Response(
+                {"status": True, "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": {"status": False, "message": "Invalid order status"}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 class MyOrdersView(ListAPIView):
     serializer_class = MyLineItemIndexSerializer

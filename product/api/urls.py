@@ -8,6 +8,7 @@ from .views import (
     ProductView,
     ReviewList,
     ReviewView,
+    UpdateOrderStatusView,
     UserIDView,
     ProductListView,
     ProductDetailView,
@@ -58,6 +59,7 @@ urlpatterns = [
         OrderItemDeleteView.as_view(),
         name="order-item-delete",
     ),
+    path('update_order_status/<int:id>/', UpdateOrderStatusView.as_view(), name='update_order_status'),
     path(
         "order-item/update-quantity/",
         OrderQuantityUpdateView.as_view(),
