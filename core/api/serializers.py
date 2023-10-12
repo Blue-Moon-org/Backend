@@ -267,7 +267,7 @@ class LoginSerializer(serializers.ModelSerializer):
         fields = ["email", "password", "tokens"]
 
     def validate(self, attrs):
-        email = attrs.get("email", "")
+        email = attrs.get("email", "").lower()
         password = attrs.get("password", "")
 
         user = User.objects.filter(email=email).first()
