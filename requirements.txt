@@ -20,7 +20,7 @@ daphne==4.0.0
 Django==3.2
 django-channels==0.7.0
 django-countries==7.5.1
-django-filter==2.4.0
+django-filter
 django-utils-six==2.0
 djangorestframework==3.14.0
 djangorestframework-filters==0.11.1
