@@ -20,11 +20,13 @@ from .views import (
     UserUpdateView,
     UserDetailView,
     UserDeleteView,
+    FeedbackCreateView
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
+    
 )
 
 
@@ -57,4 +59,5 @@ urlpatterns = [
     path("add_to_notify/<id>/", AddToNotify.as_view(), name="user_following"),
     #path("user/followed/user/", user_followed_user, name="user_followed_user"),
     path("password/<email>/", ChangePassword.as_view(), name="change-password"),
+    path("feedback/", FeedbackCreateView.as_view(), name="feedback"),
 ]

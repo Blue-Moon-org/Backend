@@ -76,6 +76,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     call_code = models.CharField(max_length=500, null=True, blank=True)
     otp = models.IntegerField(blank=True, null=True, default=0)
     country = models.CharField(max_length=500, null=True, blank=True)
+    region = models.CharField(max_length=500, null=True, blank=True)
+    subregion = models.CharField(max_length=500, null=True, blank=True)
     state = models.CharField(max_length=255, null=True, blank=True)
     town = models.CharField(max_length=255, null=True, blank=True)
     address = models.CharField(max_length=244, null=True, blank=True)
@@ -87,6 +89,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     postal_code = models.CharField(max_length=50, null=True, blank=True)
     dob = models.CharField(max_length=255, null=True, blank=True)
     push_token = models.TextField(default="", blank=True, null=True)
+    lon = models.DecimalField(max_digits=22, decimal_places=16, blank=True, null=True)
+    lat = models.DecimalField(max_digits=22, decimal_places=16, blank=True, null=True)
     followers = models.ManyToManyField(
         "self", related_name="user_followers", blank=True, symmetrical=False
     )

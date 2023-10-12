@@ -45,9 +45,14 @@ from product.models import (
     Refunds,
     Review,
 )
+from rave_python import Rave
+from decouple import config
+
 
 log = logging.getLogger(__name__)
-
+RAVE_PUBLIC_KEY = config("RAVE_PUBLIC_KEY")
+RAVE_SECRET_KEY = config("RAVE_SECRET_KEY")
+rave = Rave(RAVE_PUBLIC_KEY, RAVE_SECRET_KEY, usingEnv=False)
 
 class MarketFeedView(ListAPIView):
     serializer_class = ProductDetailSerializer
@@ -888,39 +893,46 @@ class Checkout(APIView):
         payment_method = request.data.get(
             "payment_method"
         )  # New parameter for payment method
-        billing_address_id = request.data.get("BillingAddress")
-        shipping_address_id = request.data.get("ShippingAddress")
-        billing_address = Address.objects.get(id=billing_address_id)
-        shipping_address = Address.objects.get(id=shipping_address_id)
+        # billing_address_id = request.data.get("BillingAddress")
+        # shipping_address_id = request.data.get("ShippingAddress")
+        # billing_address = Address.objects.get(id=billing_address_id)
+        # shipping_address = Address.objects.get(id=shipping_address_id)
         time_sent = get_timezone_datetime()
 
         # Check the selected payment method
-        if payment_method == "stripe":
-            token = request.data.get("stripeToken")
+        if payment_method == "flutterwave":
 
-            if user.stripe_customer_id != "" and user.stripe_customer_id is not None:
-                customer = stripe.Customer.retrieve(user.stripe_customer_id)
-                customer.sources.create(source=token)
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[-1].strip()
             else:
-                customer = stripe.Customer.create(email=user.email)
-                customer.sources.create(source=token)
-                user.stripe_customer_id = customer["id"]
-                # user.one_click_purchasing = True
-                user.save()
+                ip = request.META.get('REMOTE_ADDR')
 
-            amount = int(order.get_total() * 100)
+            amount = str(order.get_total())
+            data = request.data
+           
+            payload = {
+                "cardno": data.get("card_number"),
+                "cvv": data.get("cvv"),
+                "expirymonth": data.get("exp_month"),
+                "expiryyear": data.get("exp_year"),
+                "amount": amount,
+                "email": user.email,
+                "phonenumber": user.phone,
+                "firstname": user.firstname,
+                "lastname": user.lastname,
+                "IP": ip,
+                "pin": data.get("pin"),
+                "currency": data.get("currency")
+            }
 
             try:
-                charge = stripe.Charge.create(
-                    amount=amount,  # cents
-                    currency="ngn",
-                    customer=user.stripe_customer_id,
-                )
+                charge = rave.Card.charge(payload)
                 time_arrived = get_timezone_datetime()
                 time_range = [time_sent, time_arrived]
 
                 payment = Payment()
-                payment.stripe_charge_id = charge["id"]
+                payment.txfre = charge["txRef"]
                 payment.user = user
                 payment.amount = order.get_total()
                 payment.save()
@@ -932,8 +944,8 @@ class Checkout(APIView):
 
                 order.ordered = True
                 order.payment = payment
-                order.billing_address = billing_address
-                order.shipping_address = shipping_address
+                # order.billing_address = billing_address
+                # order.shipping_address = shipping_address
                 order.ref_code = str(uuid.uuid4().hex)[:10].upper()
                 order_number = order.save()
                 order.set_line_items_from_cart(order, order_number, user)
@@ -961,9 +973,9 @@ class Checkout(APIView):
             time_range = [time_sent, time_arrived]
 
             
-            # order.payment = payment
-            order.billing_address = billing_address
-            order.shipping_address = shipping_address
+            # # order.payment = payment
+            # order.billing_address = billing_address
+            # order.shipping_address = shipping_address
             order.ref_code = str(uuid.uuid4().hex)[:10].upper()
             # print(order.save())
             order_number = order.generate_number()

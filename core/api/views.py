@@ -22,14 +22,13 @@ from .serializers import (
 )
 from core.email import *
 from rest_framework import generics, status, permissions
+from .serializers import FeedbackSerializer
 from rest_framework.generics import (
     RetrieveAPIView,
     CreateAPIView,
-    UpdateAPIView,
 )
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -389,21 +388,32 @@ class LogoutAPIView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
-class FeedbackCreateView(CreateAPIView):
-    permission_classes = (AllowAny,)
-    renderer_classes = (JSONRenderer,)
-    serializer_class = FeedbackSerializer
+class FeedbackCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def post(self, request):
+        serializer = FeedbackSerializer(data=request.data)
 
-    def create(self, request, *args, **kwargs):
-        title = request.data.get("title")
-        text = request.data.get("text")
-        username = request.data.get("username")
-        author = request.user
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        with transaction.atomic():
-            feedback = Feedback.objects.create(title=title, text=text, user=author)
-        d = FeedbackSerializer(feedback).data
-        return Response(d, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# class FeedbackCreateView(CreateAPIView):
+#     permission_classes = (AllowAny,)
+#     renderer_classes = (JSONRenderer,)
+#     serializer_class = FeedbackSerializer
+
+#     def create(self, request, *args, **kwargs):
+#         title = request.data.get("title")
+#         text = request.data.get("text")
+#         username = request.data.get("username")
+#         author = request.user
+
+#         with transaction.atomic():
+#             feedback = Feedback.objects.create(title=title, text=text, user=author)
+#         d = FeedbackSerializer(feedback).data
+#         return Response(d, status=status.HTTP_201_CREATED)
 
 
 class UserFollowers(APIView):

@@ -111,6 +111,20 @@ class OrderProductSerializer(serializers.ModelSerializer):
 
 class CreditCardSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.nickname")
+    # payload_3 = {
+    #     "cardno": "4187451811620618",
+    #     "cvv": "306",
+    #     "expirymonth": "05",
+    #     "expiryyear": "25",
+    #     "amount": "100",
+    #     "email": "korneliosyaovi@gmail.com",
+    #     "phonenumber": "08109328188",
+    #     "firstname": "Cornelius",
+    #     "lastname": "Ashley",
+    #     "IP": "355426087298442",
+    #     "pin": "7991",
+    #     "currency": "NGN"
+    #     }
 
     class Meta:
         model = CreditCard

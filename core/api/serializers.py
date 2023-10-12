@@ -12,14 +12,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "email",
-            # "username",
             "google",
             "phone",
-            "state",
-            "town",
             "password",
             "brand_name",
             "account_type",
+            "country",
+            "city",
+            "address",
+            "lon",
+            "lat",
+            "region",
+            "subregion",
             "firstname",
             "lastname",
         ]
@@ -35,6 +39,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class FeedbackSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.fullname")
     class Meta:
         model = Feedback
         fields = ("id", "title", "text", "user", "created_on")
