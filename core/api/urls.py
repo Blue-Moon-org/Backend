@@ -7,6 +7,7 @@ from .views import (
     PhoneVerifyAPIView,
     RegisterView,
     ResendOtpAPIView,
+    UserLocationView,
     UserProfile,
     VerifyEmail,
     LoginAPIView,
@@ -60,4 +61,5 @@ urlpatterns = [
     #path("user/followed/user/", user_followed_user, name="user_followed_user"),
     path("password/<email>/", ChangePassword.as_view(), name="change-password"),
     path("feedback/", FeedbackCreateView.as_view(), name="feedback"),
+    path('get_users_within_range/', UserLocationView.as_view(), name='get_users_within_range'),
 ]

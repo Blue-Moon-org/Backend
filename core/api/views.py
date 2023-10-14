@@ -1,11 +1,11 @@
+import math
 import random
 from datetime import date
 
-from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 
-from core.models import User, Feedback
+from core.models import User
 from notification.models import Notification
 from .serializers import (
     GetEmailSerializer,
@@ -25,15 +25,18 @@ from rest_framework import generics, status, permissions
 from .serializers import FeedbackSerializer
 from rest_framework.generics import (
     RetrieveAPIView,
-    CreateAPIView,
 )
-from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from helper.utils import Util
 from twilio.rest import Client
+from django.db.models import DecimalField, ExpressionWrapper
+from django.db.models import F
+from django.db.models.functions import ACos, Cos, Sin, Radians, Power, Sqrt
+from decimal import *
+
 
 
 class CheckEmailView(generics.GenericAPIView):
@@ -730,3 +733,59 @@ class ChangePassword(generics.GenericAPIView):
             {"status": True, "message": "Password changed succesfully"},
             status=status.HTTP_200_OK,
         )
+
+
+# class UserLocationView(APIView):
+#     def post(self, request):
+#         # Input coordinates
+#         latitude = Decimal(request.data.get('latitude'))
+#         longitude = Decimal(request.data.get('longitude'))
+#         max_distance = float(request.data.get('max_distance'))
+
+#         # Calculate the distance using the Haversine formula
+#         users = User.objects.annotate(
+#             dLat=Radians(F('lat') - latitude),
+#             dLon=Radians(F('lon') - longitude),
+#             a=ExpressionWrapper(
+#                 (Sin(F('dLat') / 2)** 2) +
+#                 Cos(Radians(latitude)) * Cos(Radians(F('lat'))) *
+#                 (Sin(F('dLon') ** 2), 2), output_field=DecimalField()
+#             ),
+#             c=2 * ATan(math.sqrt(F('a')), math.sqrt(1 - F('a')),
+#             ),
+#             distance=6371 * F('c'),  # Radius of the Earth in km
+#         ).filter(distance__lte=max_distance)
+
+#         serializer = UserProfileSerializer(users, many=True)
+#         return Response(serializer.data)
+    
+class UserLocationView(APIView):
+    def post(self, request):
+        latitude = Decimal(request.data.get('latitude'))
+        longitude = Decimal(request.data.get('longitude'))
+        max_distance = float(request.data.get('max_distance'))
+
+
+        users = User.objects.filter(lat__isnull=False, lon__isnull=False).annotate(
+            lat_diff=Radians(F('lat') - latitude),
+            lon_diff=Radians(F('lon') - longitude),
+            a = ExpressionWrapper(
+                Power(Sin(F('lat_diff') / 2), 2) + 
+                math.cos(latitude * Decimal(math.pi / 180.0)) * 
+                Cos(Radians(F('lat'))*Power(Sin(F('lon_diff') / 2), 2))
+                ,
+                output_field=DecimalField()
+            ),
+            c = ExpressionWrapper(
+                2 * ACos(Sqrt(F('a'))),
+                output_field=DecimalField()
+            ),
+            distance = ExpressionWrapper(
+                6371 * F('c'),  # Radius of the Earth in km
+                output_field=DecimalField()
+            )
+        )
+        users = users.filter(distance__lte=max_distance)
+        serializer = UserProfileSerializer(users, many=True)
+        
+        return Response(serializer.data)

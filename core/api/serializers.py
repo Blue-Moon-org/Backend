@@ -48,7 +48,12 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class UserLessInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id","fullname", "image", "bio"]
+        fields = ["id", 
+                  "fullname", 
+                  "brand_image", 
+                  "image", 
+                  "brand_name", 
+                  "bio"]
 
 
 class UserCountSerializer(serializers.ModelSerializer):
@@ -318,3 +323,4 @@ class ListUserSerializer(serializers.ModelSerializer):
             else:
                 return False
         return False
+

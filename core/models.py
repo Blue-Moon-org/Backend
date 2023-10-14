@@ -5,7 +5,6 @@ from django.contrib.auth.models import (
     PermissionsMixin,
     BaseUserManager,
 )
-from django.template.defaultfilters import slugify
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import ugettext_lazy as _
@@ -145,28 +144,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def following_count(self):
-        return self.following.all().count()
+        return self.following.all().count()\
+        
+   
 
     class Meta:
         ordering = ("-created_at",)
 
     def __str__(self):
         return self.email
-
-    # def save(self, *args, **kwargs):
-    #     # ex = False
-    #     # SIZE = 250, 250
-    #     # if self.email:
-    #     #     to_slug = slugify(str(self.email))
-    #     #     ex = User.objects.filter(slug=to_slug).exists()
-    #     #     while ex:
-    #     #         to_slug = slugify(to_slug + "" + str(get_random_code()))
-    #     #         ex = User.objects.filter(slug=to_slug).exists()
-    #     # else:
-    #     #     to_slug = str(self.email)
-    #     to_slug = slugify(str(self.fullname))
-    #     self.slug = to_slug
-    #     super().save(*args, **kwargs)
 
 
 class Feedback(models.Model):
