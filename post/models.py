@@ -70,6 +70,12 @@ class Comment(models.Model):
     owner = models.ForeignKey(User, related_name="comments", on_delete=models.CASCADE)
     post = models.ForeignKey(Post, related_name="post_comments", on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name="comment_like",
+        verbose_name=_("Likes"),
+    )
 
     class Meta:
         ordering = ["created"]
