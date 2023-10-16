@@ -32,7 +32,7 @@ class CouponSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.fullname")
+    owner = serializers.ReadOnlyField(source="owner.brand_name")
     images = serializers.SerializerMethodField(method_name="get_images")
     # category = serializers.SerializerMethodField()
     # label = serializers.SerializerMethodField()
@@ -369,6 +369,7 @@ class OrderUserSerializer(serializers.ModelSerializer):
             "phone",
             "fullname",
             "account_type",
+            "address"
         ]
 
 
