@@ -15,7 +15,6 @@ from .views import (
     AddToCartView,
     OrderDetailView,
     OrderQuantityUpdateView,
-    PaymentView,
     AddCouponView,
     CountryListView,
     AddressListView,
@@ -27,6 +26,7 @@ from .views import (
     BankView,
     CreditcardView,
     UserProdctsView,
+    MyProducts,
 )
 
 app_name = "product"
@@ -35,6 +35,7 @@ urlpatterns = [
     path("user-id/", UserIDView.as_view(), name="user-id"),
     path("credit-card/", CreditcardView.as_view(), name="credit-card"),
     path("productfeed/<str:category>/", MarketFeedView.as_view(), name="marketfeed"),
+    path("for-sale/", MyProducts.as_view(), name="for-sale"),
     path("bank/", BankView.as_view(), name="bank"),
     path("countries/", CountryListView.as_view(), name="country-list"),
     path("addresses/", AddressListView.as_view(), name="address-list"),
@@ -59,7 +60,11 @@ urlpatterns = [
         OrderItemDeleteView.as_view(),
         name="order-item-delete",
     ),
-    path('update_order_status/<int:id>/', UpdateOrderStatusView.as_view(), name='update_order_status'),
+    path(
+        "update_order_status/<int:id>/",
+        UpdateOrderStatusView.as_view(),
+        name="update_order_status",
+    ),
     path(
         "order-item/update-quantity/",
         OrderQuantityUpdateView.as_view(),
@@ -67,5 +72,5 @@ urlpatterns = [
     ),
     path("payments/", PaymentListView.as_view(), name="payment-list"),
     path("review/create/", ReviewView.as_view(), name="create-review"),
-    path('reviews/<int:pk>/', ReviewList.as_view(), name='review-list'),
+    path("reviews/<int:pk>/", ReviewList.as_view(), name="review-list"),
 ]

@@ -4,6 +4,7 @@ from datetime import date
 
 from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.models import User
 from notification.models import Notification
@@ -12,7 +13,6 @@ from .serializers import (
     ListUserSerializer,
     UserProfileSerializer,
     RegisterSerializer,
-    LogoutSerializer,
     LoginSerializer,
     VerifyOTPRegisterSerializer,
     FeedbackSerializer,
@@ -36,7 +36,6 @@ from django.db.models import DecimalField, ExpressionWrapper
 from django.db.models import F
 from django.db.models.functions import ACos, Cos, Sin, Radians, Power, Sqrt
 from decimal import *
-
 
 
 class CheckEmailView(generics.GenericAPIView):
@@ -189,19 +188,6 @@ class LoginAPIView(generics.GenericAPIView):
                 {"error": {"status": False, "message": "Email or password incorrect"}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-
-# class LoginAPIView(generics.GenericAPIView):
-#     permission_classes = (permissions.AllowAny,)
-#     serializer_class = LoginSerializer
-
-#     def post(self, request):
-#         serializer = LoginSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         user_data = serializer.data
-#         user = UserProfileSerializer(User.objects.get(email=user_data["email"])).data
-#         data = {"tokens": user_data["tokens"], "user_data": user}
-#         return Response({"status": True, "data": data}, status=status.HTTP_200_OK)
 
 
 class ResetPasswordAPIView(generics.GenericAPIView):
@@ -372,27 +358,26 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
         )
 
 
-class LogoutAPIView(generics.GenericAPIView):
-    serializer_class = LogoutSerializer
-
-    permission_classes = (permissions.AllowAny,)
-
+class LogoutAPIView(APIView):
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        user_data = serializer.data
-        user = User.objects.get(id=user_data["id"])
-        if user.is_verified:
-            user.active = False
-            user.otp = 0
-            user.save()
+        refresh_token = request.data.get("refresh_token")
 
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        if not refresh_token:
+            return Response(
+                {"message": "Refresh token is required."},
+                status=status.HTTP_BAD_REQUEST,
+            )
+
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+        return Response(
+            {"message": "Successfully logged out."}, status=status.HTTP_200_OK
+        )
 
 
 class FeedbackCreateView(APIView):
     permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         serializer = FeedbackSerializer(data=request.data)
 
@@ -401,22 +386,6 @@ class FeedbackCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# class FeedbackCreateView(CreateAPIView):
-#     permission_classes = (AllowAny,)
-#     renderer_classes = (JSONRenderer,)
-#     serializer_class = FeedbackSerializer
-
-#     def create(self, request, *args, **kwargs):
-#         title = request.data.get("title")
-#         text = request.data.get("text")
-#         username = request.data.get("username")
-#         author = request.user
-
-#         with transaction.atomic():
-#             feedback = Feedback.objects.create(title=title, text=text, user=author)
-#         d = FeedbackSerializer(feedback).data
-#         return Response(d, status=status.HTTP_201_CREATED)
 
 
 class UserFollowers(APIView):
@@ -531,25 +500,6 @@ class AddToNotify(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
-
-
-# @api_view(["POST"])
-# @permission_classes((AllowAny,))
-# def user_followed_user(request):
-#     if request.method == "POST":
-#         username = request.data.get("username")
-#         fu_user = get_object_or_404(User, username=username)
-#         user = request.user
-#         if user in fu_user.followers.all():
-#             following = True
-#         else:
-#             following = False
-#         return Response(
-#             {
-#                 "following": following,
-#             },
-#             status=status.HTTP_201_CREATED,
-#         )
 
 
 class UserProfile(APIView):
@@ -735,57 +685,27 @@ class ChangePassword(generics.GenericAPIView):
         )
 
 
-# class UserLocationView(APIView):
-#     def post(self, request):
-#         # Input coordinates
-#         latitude = Decimal(request.data.get('latitude'))
-#         longitude = Decimal(request.data.get('longitude'))
-#         max_distance = float(request.data.get('max_distance'))
-
-#         # Calculate the distance using the Haversine formula
-#         users = User.objects.annotate(
-#             dLat=Radians(F('lat') - latitude),
-#             dLon=Radians(F('lon') - longitude),
-#             a=ExpressionWrapper(
-#                 (Sin(F('dLat') / 2)** 2) +
-#                 Cos(Radians(latitude)) * Cos(Radians(F('lat'))) *
-#                 (Sin(F('dLon') ** 2), 2), output_field=DecimalField()
-#             ),
-#             c=2 * ATan(math.sqrt(F('a')), math.sqrt(1 - F('a')),
-#             ),
-#             distance=6371 * F('c'),  # Radius of the Earth in km
-#         ).filter(distance__lte=max_distance)
-
-#         serializer = UserProfileSerializer(users, many=True)
-#         return Response(serializer.data)
-    
 class UserLocationView(APIView):
     def post(self, request):
-        latitude = Decimal(request.data.get('latitude'))
-        longitude = Decimal(request.data.get('longitude'))
-        max_distance = float(request.data.get('max_distance'))
-
+        latitude = Decimal(request.data.get("latitude"))
+        longitude = Decimal(request.data.get("longitude"))
+        max_distance = float(request.data.get("max_distance"))
 
         users = User.objects.filter(lat__isnull=False, lon__isnull=False).annotate(
-            lat_diff=Radians(F('lat') - latitude),
-            lon_diff=Radians(F('lon') - longitude),
-            a = ExpressionWrapper(
-                Power(Sin(F('lat_diff') / 2), 2) + 
-                math.cos(latitude * Decimal(math.pi / 180.0)) * 
-                Cos(Radians(F('lat'))*Power(Sin(F('lon_diff') / 2), 2))
-                ,
-                output_field=DecimalField()
+            lat_diff=Radians(F("lat") - latitude),
+            lon_diff=Radians(F("lon") - longitude),
+            a=ExpressionWrapper(
+                Power(Sin(F("lat_diff") / 2), 2)
+                + math.cos(latitude * Decimal(math.pi / 180.0))
+                * Cos(Radians(F("lat")) * Power(Sin(F("lon_diff") / 2), 2)),
+                output_field=DecimalField(),
             ),
-            c = ExpressionWrapper(
-                2 * ACos(Sqrt(F('a'))),
-                output_field=DecimalField()
+            c=ExpressionWrapper(2 * ACos(Sqrt(F("a"))), output_field=DecimalField()),
+            distance=ExpressionWrapper(
+                6371 * F("c"), output_field=DecimalField()  # Radius of the Earth in km
             ),
-            distance = ExpressionWrapper(
-                6371 * F('c'),  # Radius of the Earth in km
-                output_field=DecimalField()
-            )
         )
         users = users.filter(distance__lte=max_distance)
         serializer = UserProfileSerializer(users, many=True)
-        
+
         return Response(serializer.data)

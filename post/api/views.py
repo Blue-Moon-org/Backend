@@ -1,3 +1,4 @@
+from notification.models import Notification
 from post.models import Post  # , Comment, Category, LikedPost
 from core.models import User
 from helper.utils import CustomPagination
@@ -40,17 +41,25 @@ class FeedView(ListAPIView):
             queryset = Post.objects.all()
             page = self.paginate_queryset(queryset)
             if page is not None:
-                serializer = self.get_serializer(page, many=True)
+                serializer = self.get_serializer(
+                    page, many=True, context={"request": request}
+                )
             else:
-                serializer = self.get_serializer(queryset, many=True)
+                serializer = self.get_serializer(
+                    queryset, many=True, context={"request": request}
+                )
 
         else:
             queryset = Post.objects.filter(category=category)
             page = self.paginate_queryset(queryset)
             if page is not None:
-                serializer = self.get_serializer(page, many=True)
+                serializer = self.get_serializer(
+                    page, many=True, context={"request": request}
+                )
             else:
-                serializer = self.get_serializer(queryset, many=True)
+                serializer = self.get_serializer(
+                    queryset, many=True, context={"request": request}
+                )
 
         category_data = {
             "category": category,
@@ -72,13 +81,16 @@ class CommentList(ListAPIView):
     pagination_class = CustomPagination  # Use the custom pagination class
 
     def list(self, request, pk, *args, **kwargs):
-        
         queryset = Comment.objects.filter(post=pk)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                page, many=True, context={"request": request}
+            )
         else:
-            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                queryset, many=True, context={"request": request}
+            )
         response_data = {
             "status": True,
             "message": "comments fetched successfully",
@@ -96,7 +108,7 @@ class PostView(APIView):
         serializer = PostSerializer(data=data)
         # Get a list of all uploaded image files
         images = request.FILES.getlist("images")
-        #log.info(images)
+        # log.info(images)
         if serializer.is_valid():
             post = serializer.save(owner=user)
             # Save each image associated with the post
@@ -140,7 +152,10 @@ class LikePost(APIView):
         if user in post.likes.all():
             post.likes.remove(user)
             post.save()
-            data = PostDetailSerializer(Post.objects.get(id=post.id), context={'request': request}).data
+            data = PostDetailSerializer(
+                Post.objects.get(id=post.id), context={"request": request}
+            ).data
+
             return Response(
                 {"status": True, "data": data, "message": "Post Unliked"},
                 status=status.HTTP_200_OK,
@@ -149,8 +164,16 @@ class LikePost(APIView):
         else:
             post.likes.add(user)
             post.save()
-            data = PostDetailSerializer(Post.objects.get(id=post.id), context={'request': request}).data
-
+            data = PostDetailSerializer(
+                Post.objects.get(id=post.id), context={"request": request}
+            ).data
+            notify = Notification.objects.create(
+                notification_type="UF",
+                comments=f"@{user.firstname} liked your post",
+                to_user=post.owner,
+                from_user=user,
+            )
+            notify.save()
             return Response(
                 {"status": True, "data": data, "message": "Post liked"},
                 status=status.HTTP_200_OK,
@@ -166,12 +189,14 @@ class SharePost(APIView):
 
         post.shares.add(user.id)
         post.save()
-        data = PostDetailSerializer(Post.objects.get(id=post.id), context={'request': request}).data
+        data = PostDetailSerializer(
+            Post.objects.get(id=post.id), context={"request": request}
+        ).data
 
         return Response(
             {
                 "status": True,
-                "data":data,
+                "data": data,
                 "message": "Post shared successfully",
             },
             status=status.HTTP_201_CREATED,
@@ -187,12 +212,14 @@ class FavoritePost(APIView):
         if user not in post.favourite.all():
             post.favourite.add(user)
             post.save()
-            data = PostDetailSerializer(Post.objects.get(id=post.id), context={'request': request}).data
+            data = PostDetailSerializer(
+                Post.objects.get(id=post.id), context={"request": request}
+            ).data
 
             return Response(
                 {
                     "status": True,
-                    "data":data,
+                    "data": data,
                     "message": "Post marked as favorite",
                 },
                 status=status.HTTP_200_OK,
@@ -200,12 +227,12 @@ class FavoritePost(APIView):
         else:
             post.favourite.remove(user)
             post.save()
-            data = PostDetailSerializer(Post.objects.get(id=post.id), context={'request': request}).data
+            data = PostDetailSerializer(
+                Post.objects.get(id=post.id), context={"request": request}
+            ).data
 
             return Response(
-                {"status": True, 
-                 "data":data,
-                 "message": "Post removed as favorite"},
+                {"status": True, "data": data, "message": "Post removed as favorite"},
                 status=status.HTTP_200_OK,
             )
 
@@ -226,6 +253,13 @@ class CommentView(APIView):
         serializer = CommentSerializer(data=data)
         if serializer.is_valid():
             serializer.save(owner=user)
+            notify = Notification.objects.create(
+                notification_type="C",
+                comments=f"@{user.firstname} commented on your post",
+                to_user=post.owner,
+                from_user=user,
+            )
+            notify.save()
             return Response(
                 {
                     "status": True,
@@ -251,14 +285,15 @@ class LikeComment(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        user = request.user#User.objects.filter(id=.id).first()
+        user = request.user  # User.objects.filter(id=.id).first()
         comment = get_object_or_404(Comment, pk=pk)
 
         if user in comment.likes.all():
             comment.likes.remove(user)
             comment.save()
-            data = CommentDetailSerializer(Comment.objects.get(id=comment.id), 
-                                           context={'request': request}).data
+            data = CommentDetailSerializer(
+                Comment.objects.get(id=comment.id), context={"request": request}
+            ).data
             return Response(
                 {"status": True, "data": data, "message": "Comment Unliked"},
                 status=status.HTTP_200_OK,
@@ -267,13 +302,16 @@ class LikeComment(APIView):
         else:
             comment.likes.add(user)
             comment.save()
-            data = CommentDetailSerializer(Comment.objects.get(id=comment.id), 
-                                           context={'request': request}).data
+            data = CommentDetailSerializer(
+                Comment.objects.get(id=comment.id), context={"request": request}
+            ).data
 
             return Response(
                 {"status": True, "data": data, "message": "Comment liked"},
                 status=status.HTTP_200_OK,
             )
+
+
 # class BookmarksView(APIView):
 #     def post(self, request):
 
@@ -376,3 +414,47 @@ class LikeComment(APIView):
 #                 },
 #                 status=status.HTTP_200_OK,
 #             )
+
+
+class MyPostsView(ListAPIView):
+    serializer_class = PostDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = Post.objects.filter(owner=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            "status": True,
+            "message": "Posts fetched successfully",
+            "posts": serializer.data,
+        }
+
+        return self.get_paginated_response(response_data)
+
+
+class MyLikedPostsView(ListAPIView):
+    serializer_class = PostDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = Post.objects.filter(likes__id=request.user.id)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            "status": True,
+            "message": "Liked posts fetched successfully",
+            "posts": serializer.data,
+        }
+
+        return self.get_paginated_response(response_data)

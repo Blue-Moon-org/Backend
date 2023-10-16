@@ -5,10 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from helper.utils import CATEGORY
 
 
-
-
 class Post(models.Model):
-
     title = models.CharField(max_length=100, blank=True, default="")
     body = models.TextField(blank=True, default="")
     owner = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
@@ -44,20 +41,24 @@ class Post(models.Model):
     #         return self.thumbnail.url
     #     else:
     #         return ""
-        
+
+
 class Image(models.Model):
-    post = models.ForeignKey(Post, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='post_images/')
+    post = models.ForeignKey(Post, related_name="images", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="post_images/")
+
     @property
     def image_url(self):
-
         if self.image and hasattr(self.image, "url"):
             return self.image.url
         else:
             return ""
 
+
 class Category(models.Model):
-    authur = models.ForeignKey(User, related_name="post_category", on_delete=models.CASCADE)
+    authur = models.ForeignKey(
+        User, related_name="post_category", on_delete=models.CASCADE
+    )
     name = models.CharField(max_length=100, blank=False, default="", unique=True)
 
     class Meta:
@@ -65,10 +66,11 @@ class Category(models.Model):
 
 
 class Comment(models.Model):
-
     body = models.TextField(blank=True)
     owner = models.ForeignKey(User, related_name="comments", on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, related_name="post_comments", on_delete=models.CASCADE)
+    post = models.ForeignKey(
+        Post, related_name="post_comments", on_delete=models.CASCADE
+    )
     created = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(
         User,

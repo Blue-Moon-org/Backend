@@ -17,6 +17,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
+
+from notification.models import Notification
 from .serializers import (
     LineItemIndexSerializer,
     MyLineItemIndexSerializer,
@@ -53,6 +55,7 @@ log = logging.getLogger(__name__)
 RAVE_PUBLIC_KEY = config("RAVE_PUBLIC_KEY")
 RAVE_SECRET_KEY = config("RAVE_SECRET_KEY")
 rave = Rave(RAVE_PUBLIC_KEY, RAVE_SECRET_KEY, usingEnv=False)
+
 
 class MarketFeedView(ListAPIView):
     serializer_class = ProductDetailSerializer
@@ -206,13 +209,13 @@ class ProductView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class ReviewList(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ReviewSerializer
     pagination_class = CustomPagination  # Use the custom pagination class
 
     def list(self, request, pk, *args, **kwargs):
-        # print(request.build_absolute_uri())
         queryset = Review.objects.filter(id=pk)
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -221,17 +224,16 @@ class ReviewList(ListAPIView):
             serializer = self.get_serializer(queryset, many=True)
         response_data = {
             "status": True,
-            "message": "reviws fetched successfully",
+            "message": "Reviws fetched successfully",
             "reviews": serializer.data,
-            
         }
         return self.get_paginated_response(response_data)
+
 
 class ReviewView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-        
         user = request.user
         data = request.data
         serializer = ReviewSerializer(data=data)
@@ -246,6 +248,8 @@ class ReviewView(APIView):
             {"status": False, "error": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
 # @method_decorator(designer_required, name='dispatch')
 class UserProdctsView(ListAPIView):
     serializer_class = ProductDetailSerializer
@@ -652,7 +656,7 @@ class UpdateOrderStatusView(APIView):
             line_item = LineItem.objects.get(id=id)
         except LineItem.DoesNotExist:
             return Response(
-                {"error": {"status": False, "message": "LineItem not found"}},
+                {"error": {"status": False, "message": "Order not found"}},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -671,6 +675,7 @@ class UpdateOrderStatusView(APIView):
                 {"error": {"status": False, "message": "Invalid order status"}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
 
 class MyOrdersView(ListAPIView):
     serializer_class = MyLineItemIndexSerializer
@@ -697,13 +702,15 @@ class MyOrdersView(ListAPIView):
         page = self.paginate_queryset(queryset)
 
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = self.get_serializer(
+                page, many=True, context={"request": request}
+            )
             return self.get_paginated_response({"order_items": serializer.data})
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(
+            queryset, many=True, context={"request": request}
+        )
         return Response({"order_items": serializer.data})
-    
-
 
 
 class OrderDetailView(APIView):
@@ -901,16 +908,15 @@ class Checkout(APIView):
 
         # Check the selected payment method
         if payment_method == "flutterwave":
-
-            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
             if x_forwarded_for:
-                ip = x_forwarded_for.split(',')[-1].strip()
+                ip = x_forwarded_for.split(",")[-1].strip()
             else:
-                ip = request.META.get('REMOTE_ADDR')
+                ip = request.META.get("REMOTE_ADDR")
 
             amount = str(order.get_total())
             data = request.data
-           
+
             payload = {
                 "cardno": data.get("card_number"),
                 "cvv": data.get("cvv"),
@@ -923,7 +929,7 @@ class Checkout(APIView):
                 "lastname": user.lastname,
                 "IP": ip,
                 "pin": data.get("pin"),
-                "currency": data.get("currency")
+                "currency": data.get("currency"),
             }
 
             try:
@@ -951,6 +957,14 @@ class Checkout(APIView):
                 order.set_line_items_from_cart(order, order_number, user)
                 order.set_transaction(payment_method, user, charge, time_range)
 
+                #     notify = Notification.objects.create(
+                #     notification_type="NO",
+                #     comments=f"@{user.firstname} liked your post",
+                #     to_user=post.owner,
+                #     from_user=user,
+                # )
+                #     notify.save()
+
                 return Response(
                     {"status": True, "message": "Payment Successful"},
                     status=HTTP_200_OK,
@@ -967,12 +981,11 @@ class Checkout(APIView):
         elif payment_method == "pay_on_delivery":  # Handle Pay on Delivery
             order_products = order.products.all()
             # # order_products.update(ordered=True)
-            
+
             #     item.save()
             time_arrived = get_timezone_datetime()
             time_range = [time_sent, time_arrived]
 
-            
             # # order.payment = payment
             # order.billing_address = billing_address
             # order.shipping_address = shipping_address
@@ -1117,3 +1130,59 @@ class PaymentListView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class MyProducts(ListAPIView):
+    serializer_class = ProductDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = Product.objects.filter(owner=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            "status": True,
+            "message": "Products fetched successfully",
+            "products": serializer.data,
+        }
+        return self.get_paginated_response(response_data)
+
+
+class CatalogueView(ListAPIView):
+    serializer_class = ProductDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, category="All", *args, **kwargs):
+        if category == "All" or category == "":
+            queryset = Product.objects.all()
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
+
+        else:
+            queryset = Product.objects.filter(category=category)
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+            else:
+                serializer = self.get_serializer(queryset, many=True)
+
+        category_data = {
+            "category": category,
+            "product": serializer.data,
+        }
+
+        response_data = {
+            "status": True,
+            "message": "Products fetched successfully",
+            "categoryData": category_data,
+        }
+        return self.get_paginated_response(response_data)

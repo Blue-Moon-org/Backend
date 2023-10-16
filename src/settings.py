@@ -25,65 +25,60 @@ from .logger import LOGGING
 # Application definition
 INSTALLED_APPS = [
     "daphne",
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     "channels",
     "core",
     "notification",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "post",
     "product",
     "chat",
     "search",
-    'django_filters',
-    
+    "django_filters",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'src.urls'
+ROOT_URLCONF = "src.urls"
 AUTH_USER_MODEL = "core.User"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'src.wsgi.application'
-ASGI_APPLICATION = 'src.routing.application'
-
+WSGI_APPLICATION = "src.wsgi.application"
+ASGI_APPLICATION = "src.routing.application"
 
 
 if DEBUG:
-    CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
-}
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 else:
     CHANNEL_LAYERS = {
         "default": {
@@ -100,20 +95,20 @@ else:
 
 if DEBUG:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'bluemoon',
-            'USER': 'hakeem',
-            'PASSWORD': 'rexonance',
-            'HOST': 'localhost',
-            'PORT': 3306,
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "bluemoon",
+            "USER": "hakeem",
+            "PASSWORD": "rexonance",
+            "HOST": "localhost",
+            "PORT": 3306,
         }
     }
 
@@ -122,16 +117,16 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -139,9 +134,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -153,14 +148,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 # if DEBUG:
 #     STATICFILES_DIRS = [
 #         os.path.join(BASE_DIR, 'static')
 #     ]
 # else:
 #     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 
 # media
@@ -171,7 +166,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -206,9 +201,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    'DEFAULT_PAGINATION_CLASS': 'helper.utils.CustomPagination',
+    "DEFAULT_PAGINATION_CLASS": "helper.utils.CustomPagination",
     "PAGE_SIZE": 18,
-    
 }
 
 
@@ -230,13 +224,13 @@ SIMPLE_JWT = {
 EMAIL_USE_TLS = True
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER="l3g3nd.gam3@gmail.com"
-EMAIL_HOST_PASSWORD="flzhczqayxfdjkwg"
+EMAIL_HOST_USER = "l3g3nd.gam3@gmail.com"
+EMAIL_HOST_PASSWORD = "flzhczqayxfdjkwg"
 # EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 # EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 EMAIL_DEBUG = True
 
 # # twilio settings
-TWILIO_ACCOUNT_SID = 'ACe049e152c930eb680c84c923d8bd0d99'
-TWILIO_AUTH_TOKEN = '78fbb1ef8231566fcbce64ec49687f5b'
-TWILIO_PHONE_NUMBER = '+1 417 620 4546'
+TWILIO_ACCOUNT_SID = "ACe049e152c930eb680c84c923d8bd0d99"
+TWILIO_AUTH_TOKEN = "78fbb1ef8231566fcbce64ec49687f5b"
+TWILIO_PHONE_NUMBER = "+1 417 620 4546"

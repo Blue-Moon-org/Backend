@@ -10,11 +10,15 @@ from .views import (
     LikePost,
     SharePost,
     FavoritePost,
+    MyPostsView,
+    MyLikedPostsView
 )
 
 urlpatterns = [
     path('featured/', FeaturedPosts.as_view(), name='featured-posts'),
     path('feed/<str:category>/', FeedView.as_view(), name='feed'),
+    path('myposts/', MyPostsView.as_view(), name='myposts'),
+    path('liked/', MyLikedPostsView.as_view(), name='liked'),
     path('posts/', PostView.as_view(), name='post-list'),
     path('posts/<int:pk>/', PostDetail.as_view(), name='post-detail'),
     path('like/<int:pk>/', LikePost.as_view(), name='like-post'),

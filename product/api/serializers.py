@@ -1,5 +1,6 @@
 from django_countries.serializer_fields import CountryField
 from rest_framework import serializers
+from core.api.serializers import UserLessInfoSerializer
 from core.models import User
 from product.models import (
     LineItem,
@@ -200,6 +201,7 @@ class RantingSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField(method_name="get_user")
     owner = serializers.ReadOnlyField(source="owner.fullname")
     category = serializers.SerializerMethodField()
     label = serializers.SerializerMethodField()
@@ -214,6 +216,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id",
+            "user",
             "owner",
             "title",
             "price",
@@ -228,6 +231,10 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "user_has_carted",
         )
 
+    def get_user(self, obj):
+        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
+        return data
+
     def get_images(self, obj):
         data = ProductImagesSerializer(
             ProductImage.objects.filter(product=obj.id), many=True
@@ -237,7 +244,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     def get_ratings(self, obj):
         reviews = Review.objects.filter(product=obj)
         num_reviews = len(reviews)
-        
+
         if num_reviews == 0:
             return 0  # Return 0 if there are no reviews
         total_rating = sum([review.rating for review in reviews])
