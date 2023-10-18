@@ -436,6 +436,27 @@ class MyPostsView(ListAPIView):
         }
 
         return self.get_paginated_response(response_data)
+    
+class MyPostsNewView(ListAPIView):
+    serializer_class = PostDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, id, *args, **kwargs):
+        queryset = Post.objects.filter(owner__id=id)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            "status": True,
+            "message": "Posts fetched successfully",
+            "posts": serializer.data,
+        }
+
+        return self.get_paginated_response(response_data)
 
 
 class MyLikedPostsView(ListAPIView):
@@ -445,6 +466,28 @@ class MyLikedPostsView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = Post.objects.filter(likes__id=request.user.id)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            "status": True,
+            "message": "Liked posts fetched successfully",
+            "posts": serializer.data,
+        }
+
+        return self.get_paginated_response(response_data)
+    
+
+class LikedPostsView(ListAPIView):
+    serializer_class = PostDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, id,*args, **kwargs):
+        queryset = Post.objects.filter(likes__id=id)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

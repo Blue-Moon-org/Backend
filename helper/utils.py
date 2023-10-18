@@ -1,4 +1,5 @@
 import random
+import string
 import time
 from django.core.mail import EmailMessage
 from string import digits, ascii_lowercase, ascii_uppercase
@@ -16,12 +17,14 @@ from chat.models import Chat#, Contact
 from core.models import User
 
 
+
 CATEGORY = (
     ("Men", "Men"),
     ("Women", "Women"),
     ("Native", "Native"),
     ("Ankara", "Ankara"),
 )
+
 
 def get_client_ip(request) -> str:
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
@@ -31,6 +34,17 @@ def get_client_ip(request) -> str:
         ip = request.META.get("REMOTE_ADDR")
     return ip
 
+
+def gen_tracking_number(LineItem):
+    # Define the length of the tracking number
+    length = 15
+    while True:
+        # Generate a random tracking number with uppercase letters and digits
+        tracking_number = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+        # Check if the generated tracking number already exists in the database
+        if not LineItem.objects.filter(tracking_number=tracking_number).exists():
+            return tracking_number
 
 def slug_generator(
     size: int = 10, char: str = digits + ascii_uppercase + ascii_lowercase

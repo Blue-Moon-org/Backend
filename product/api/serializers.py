@@ -34,8 +34,8 @@ class CouponSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.brand_name")
     images = serializers.SerializerMethodField(method_name="get_images")
-    # category = serializers.SerializerMethodField()
-    # label = serializers.SerializerMethodField()
+    #category = serializers.SerializerMethodField()
+    #label = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -83,7 +83,7 @@ class ProductVariationDetailSerializer(serializers.ModelSerializer):
 
 
 class OrderProductSerializer(serializers.ModelSerializer):
-    product_variations = serializers.SerializerMethodField()
+    #product_variations = serializers.SerializerMethodField()
     product = serializers.SerializerMethodField()
     final_price = serializers.SerializerMethodField()
 
@@ -375,45 +375,46 @@ class OrderUserSerializer(serializers.ModelSerializer):
 
 class LineItemIndexSerializer(serializers.ModelSerializer):
     user = OrderUserSerializer(many=False)
-    order = OrderSerializer(many=False)
-    product = ProductSerializer(many=False)
+    seller = OrderUserSerializer(many=False)
+    products = OrderProductSerializer(many=True)
 
     class Meta:
         model = LineItem
         fields = [
             "id",
+            "order_status",
             "user",
+            "seller",
             "order",
-            "product",
+            "products",
             "price",
             "tracking_number",
             "quantity",
-            "order_status",
+            
         ]
 
 
 class MyLineItemIndexSerializer(serializers.ModelSerializer):
-    order_products = serializers.SerializerMethodField()
+    products = OrderProductSerializer(many=True)
     user = OrderUserSerializer(many=False)
-    order = OrderSerializer(many=False)
+    #order = OrderSerializer(many=False)
 
     class Meta:
         model = LineItem
         fields = [
             "id",
             "user",
-            "order",
-            "order_products",
+            "products",
             "tracking_number",
             "quantity",
             "order_status",
         ]
 
-    def get_order_products(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return OrderProductSerializer(
-                obj.order.products.filter(product__owner_id=request.user.id), many=True
-            ).data
-        else:
-            return []
+    # def get_order_products(self, obj):
+    #     request = self.context.get("request")
+    #     if request and request.user.is_authenticated:
+    #         return OrderProductSerializer(
+    #             obj.order.products.filter(product__owner_id=request.user.id), many=True
+    #         ).data
+    #     else:
+    #         return []

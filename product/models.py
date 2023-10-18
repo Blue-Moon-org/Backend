@@ -1,10 +1,11 @@
+import random
+import string
 from django.db import models
-from django.shortcuts import get_object_or_404, reverse
+from django.shortcuts import reverse
 from django.utils.text import slugify
 from django_countries.fields import CountryField
 
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.utils import timezone
 from core.models import User
 
 import stripe
@@ -12,7 +13,7 @@ from decouple import config
 from stripe import BalanceTransaction
 import logging
 
-from helper.utils import CATEGORY, generate_transaction_id
+from helper.utils import CATEGORY, gen_tracking_number, generate_transaction_id
 from notification.models import Notification
 
 log = logging.getLogger(__name__)
@@ -323,38 +324,71 @@ class Order(models.Model):
         return self.transaction_set.first()
 
     def set_line_items_from_cart(self, cart, order_number, buyer):
-        for item in cart.products.all():
-            try:
+        # Get all the products in the order
+        order_products = cart.products.all()
+
+        # Create a dictionary to store line items by owners
+        owner_line_items = {}
+
+        # Create line items for each product, but consolidate them for the same owner
+        for product in order_products:
+            owner = product.product.owner.id
+            if owner in owner_line_items:
+                # Append the product to the existing owner's line item
+                owner_line_items[owner].products.add(product)
+                owner_line_items[owner].quantity += product.quantity
+                owner_line_items[owner].price += product.get_final_price()
+            else:
+                # Create a new line item for this owner
                 line_item = LineItem(
-                    order=self,
+                    order=cart,
                     user=buyer,
-                    quantity=item.quantity,
-                    price=item.product.price,
+                    tracking_number=gen_tracking_number(LineItem),
+                    quantity=product.quantity,
+                    price=product.get_final_price(),
                     order_number=order_number,
+                    seller=product.product.owner
                 )
                 line_item.save()
-            except Exception as e:
-                line_item = LineItem(
-                    order=self,
-                    user=buyer,
-                    product=item.product,
-                    quantity=item.quantity,
-                    price=item.product.price,
-                    order_number=order_number,
-                )
-                line_item.save()
-            try:
-                product = line_item.product
-                product.current_stock -= line_item.quantity
-                product.save()
-            except Exception as e:
-                pass
-                log.error(
-                    str(
-                        "An error occured while decrementing non variant product stock "
-                    )
-                    + str(e)
-                )
+                line_item.products.add(product)
+                owner_line_items[owner] = line_item
+
+        # Save the line items to the order
+        for owner, line_item in owner_line_items.items():
+            line_item.save()
+
+        # for item in cart.products.all():
+        #     try:
+        #         line_item = LineItem(
+        #             order=self,
+        #             user=buyer,
+        #             quantity=item.quantity,
+        #             price=item.product.price,
+        #             order_number=order_number,
+        #         )
+        #         line_item.save()
+        #     except Exception as e:
+        #         line_item = LineItem(
+        #             order=self,
+        #             user=buyer,
+        #             product=item.product,
+        #             quantity=item.quantity,
+        #             price=item.product.price,
+        #             order_number=order_number,
+        #         )
+        #         line_item.save()
+        #     try:
+        #         product = line_item.product
+        #         product.current_stock -= line_item.quantity
+        #         product.save()
+        #     except Exception as e:
+        #         pass
+        #         log.error(
+        #             str(
+        #                 "An error occured while decrementing non variant product stock "
+        #             )
+        #             + str(e)
+        #         )
 
     def set_transaction(
         self,
@@ -531,14 +565,15 @@ class Transaction(models.Model):
 
 class LineItem(models.Model):
     order = models.ForeignKey(Order, default=None, null=True, on_delete=models.CASCADE)
-    product = models.ForeignKey(
-        Product, default=None, null=True, on_delete=models.CASCADE
-    )
+    products = models.ManyToManyField(OrderProduct)
     product_variations = models.ManyToManyField(ProductVariation)
     ordertracking = models.ForeignKey(
         OrderTracking, default=None, null=True, on_delete=models.CASCADE
     )
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
+    seller = models.ForeignKey(
+        User, related_name="seller", null=True, blank=True, on_delete=models.CASCADE
+    )
     courier_agency = models.CharField(
         max_length=32, null=True, blank=True, default="N/A"
     )
@@ -569,7 +604,7 @@ class LineItem(models.Model):
         return self.price
 
     def buyer_default_address(self):
-        return self.user.default_address()
+        return self.user.address
 
 
 class Review(models.Model):

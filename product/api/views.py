@@ -248,6 +248,25 @@ class ReviewView(APIView):
             {"status": False, "error": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    
+
+class RatingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
+        reviews = Review.objects.filter(product__owner_id=id)
+        num_reviews = len(reviews)
+
+        if num_reviews == 0:
+            avg_rating = 0  # Return 0 if there are no reviews
+        else:
+            total_rating = sum([review.rating for review in reviews])
+            avg_rating = total_rating / num_reviews
+
+        return Response(
+            {"status": True, "rating":avg_rating},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 # @method_decorator(designer_required, name='dispatch')
@@ -632,7 +651,7 @@ class OrdersView(ListAPIView):
                 order__user=user, order_status=status.capitalize()
             )
         else:
-            queryset = LineItem.objects.select_related("order", "product").filter(
+            queryset = LineItem.objects.select_related("order").filter(
                 order__user=user
             )
 
@@ -687,12 +706,12 @@ class MyOrdersView(ListAPIView):
         user = self.request.user
 
         if status is not None:
-            queryset = LineItem.objects.select_related("order").filter(
-                order__products__owner=user, order_status=status.capitalize()
+            queryset = LineItem.objects.filter(
+                seller=user, order_status=status.capitalize()
             )
         else:
-            queryset = LineItem.objects.select_related("order", "product").filter(
-                order__products__product__owner=user
+            queryset = LineItem.objects.select_related("order").filter(
+                seller=user
             )
 
         return queryset
@@ -979,10 +998,8 @@ class Checkout(APIView):
                 )
 
         elif payment_method == "pay_on_delivery":  # Handle Pay on Delivery
+            
             order_products = order.products.all()
-            # # order_products.update(ordered=True)
-
-            #     item.save()
             time_arrived = get_timezone_datetime()
             time_range = [time_sent, time_arrived]
 
@@ -990,7 +1007,6 @@ class Checkout(APIView):
             # order.billing_address = billing_address
             # order.shipping_address = shipping_address
             order.ref_code = str(uuid.uuid4().hex)[:10].upper()
-            # print(order.save())
             order_number = order.generate_number()
             order.set_line_items_from_cart(order, order_number, user)
             order.set_transaction(payment_method, user, time_range)
@@ -1137,8 +1153,8 @@ class MyProducts(ListAPIView):
     pagination_class = CustomPagination  # Use the custom pagination class
     permission_classes = [IsAuthenticated]
 
-    def list(self, request, *args, **kwargs):
-        queryset = Product.objects.filter(owner=request.user)
+    def list(self, request, id, *args, **kwargs):
+        queryset = Product.objects.filter(owner__id=id)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
