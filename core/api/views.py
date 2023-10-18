@@ -42,7 +42,7 @@ class CheckEmailView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, email):
-        if not User.objects.filter(email=email).exists():
+        if not User.objects.filter(email=str(email).lower()).exists():
             return Response(
                 {"status": True, "message": "Email is available"},
                 status=status.HTTP_200_OK,
@@ -93,7 +93,7 @@ class RegisterView(generics.GenericAPIView):
                 user.day = now.day
                 user.month = now.month
                 user.year = now.year
-                user.is_active = True
+                #user.is_active = True
                 user_data["email"] = user.email
                 user_data["phone"] = user.phone
 
