@@ -143,7 +143,7 @@ class VerifyEmail(generics.GenericAPIView):
             refresh = RefreshToken.for_user(user=user)
             refresh_token = str(refresh)
             access_token = str(refresh.access_token)
-            user.is_verified = True
+            user.email_verified = True
             user.is_active = True
             user.active = True
             user.otp = 0
@@ -175,18 +175,14 @@ class VerifyPhone(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = VerifyOTPRegisterSerializer(data=request.data)
-        user_data = {}
 
         if serializer.is_valid():
-            user_data = serializer.data
             email = serializer.data["email"]
             user = User.objects.get(email=email)
             refresh = RefreshToken.for_user(user=user)
             refresh_token = str(refresh)
             access_token = str(refresh.access_token)
-            user.is_verified = True
-            user.is_active = True
-            user.active = True
+            user.phone_verified = True
             user.otp = 0
             user.save()
             return Response(

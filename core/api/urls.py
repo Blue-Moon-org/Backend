@@ -21,7 +21,8 @@ from .views import (
     UserUpdateView,
     UserDetailView,
     UserDeleteView,
-    FeedbackCreateView
+    FeedbackCreateView,
+    VerifyPhone
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -48,6 +49,7 @@ urlpatterns = [
     path("phone-verify/", PhoneVerifyAPIView.as_view(), name="phone-verify"),
     path("set-new-password/", SetNewPasswordAPIView.as_view(), name="set-new-password"),
     path("verify-email/", VerifyEmail.as_view(), name="verify-email"),
+    path("verify-phone/", VerifyPhone.as_view(), name="verify-phone"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),

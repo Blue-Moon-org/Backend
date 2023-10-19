@@ -92,7 +92,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         "self", related_name="notify", blank=True, symmetrical=False
     )
     friends = models.ManyToManyField("self", blank=True)
-    is_verified = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)
+    phone_verified = models.BooleanField(default=False)
     google = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
