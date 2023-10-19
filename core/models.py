@@ -5,13 +5,11 @@ from django.contrib.auth.models import (
     PermissionsMixin,
     BaseUserManager,
 )
-from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import ugettext_lazy as _
 
 
 class UserManager(BaseUserManager):
-     
     def create_user(self, email, password, **extra_fields):
         """
         Create and save a User with the given email and password.
@@ -37,7 +35,6 @@ class UserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Superuser must have is_superuser=True."))
         return self.create_user(email, password, **extra_fields)
-   
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -49,20 +46,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         (DESIGNER, "Designer"),
         (BUYER, "Buyer"),
         (BOTH, "Both"),
-    
     )
     id = models.UUIDField(
         primary_key=True, unique=True, default=uuid.uuid4, editable=False
     )
-    # avatar = models.ImageField(upload_to="avatar/", blank=True, null=True)
-    # cover = models.ImageField(upload_to=upload_for, blank=True, null=True)
     stripe_charge_id = models.CharField(max_length=50, default="")
     image = models.ImageField(upload_to="profile/", blank=True, null=True)
     brand_image = models.ImageField(upload_to="brand/", blank=True, null=True)
 
-    account_type = models.CharField(max_length=9,
-                  choices=TYPES,
-                  default=BUYER)
+    account_type = models.CharField(max_length=9, choices=TYPES, default=BUYER)
     email = models.EmailField(max_length=255, unique=True, null=False, blank=False)
     phone = models.CharField(max_length=255, unique=True, null=False, blank=False)
     username = models.CharField(max_length=255, null=True, blank=True)
@@ -71,7 +63,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     lastname = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True, null=True)
     sex = models.CharField(max_length=32, null=True, blank=True)
-    
+
     call_code = models.CharField(max_length=500, null=True, blank=True)
     otp = models.IntegerField(blank=True, null=True, default=0)
     country = models.CharField(max_length=500, null=True, blank=True)
@@ -99,7 +91,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     users_notify = models.ManyToManyField(
         "self", related_name="notify", blank=True, symmetrical=False
     )
-    friends = models.ManyToManyField('self', blank=True)
+    friends = models.ManyToManyField("self", blank=True)
     is_verified = models.BooleanField(default=False)
     google = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -110,7 +102,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_online = models.BooleanField(default=False)
     active = models.BooleanField(default=False)
     tos = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     created = models.CharField(max_length=255, null=True, blank=True)
 
     objects = UserManager()
@@ -120,11 +112,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def fullname(self):
-        return self.firstname +" "+self.lastname
+        return self.firstname + " " + self.lastname
 
     def get_short_name(self):
         return self.firstname
-    
+
     @property
     def tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -133,10 +125,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def followers_count(self):
         return self.followers.all().count()
-    
+
     @property
     def image_url(self):
-
         if self.image and hasattr(self.image, "url"):
             return self.image.url
         else:
@@ -144,9 +135,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def following_count(self):
-        return self.following.all().count()\
-        
-   
+        return self.following.all().count()
 
     class Meta:
         ordering = ("-created_at",)
@@ -161,7 +150,7 @@ class Feedback(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, editable=False, blank=True, null=True
     )
-    created_on = models.DateTimeField(default=timezone.now)
+    created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user} gave feedback {self.title}"

@@ -93,7 +93,7 @@ class RegisterView(generics.GenericAPIView):
                 user.day = now.day
                 user.month = now.month
                 user.year = now.year
-                #user.is_active = True
+                user.is_active = True
                 user_data["email"] = user.email
                 user_data["phone"] = user.phone
 
@@ -129,6 +129,47 @@ class RegisterView(generics.GenericAPIView):
 
 
 class VerifyEmail(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = VerifyOTPRegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = VerifyOTPRegisterSerializer(data=request.data)
+        user_data = {}
+
+        if serializer.is_valid():
+            user_data = serializer.data
+            email = serializer.data["email"]
+            user = User.objects.get(email=email)
+            refresh = RefreshToken.for_user(user=user)
+            refresh_token = str(refresh)
+            access_token = str(refresh.access_token)
+            user.is_verified = True
+            user.is_active = True
+            user.active = True
+            user.otp = 0
+            user.save()
+            return Response(
+                {
+                    "status": True,
+                    "data": {
+                        "id": user.id,
+                        "email": user.email,
+                        "username": user.username,
+                        "phone": user.phone,
+                        "refresh_token": refresh_token,
+                        "access_token": access_token,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": {"status": False, "message": "OTP is invalid"}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class VerifyPhone(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = VerifyOTPRegisterSerializer
 

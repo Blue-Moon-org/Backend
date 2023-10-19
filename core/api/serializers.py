@@ -40,6 +40,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class FeedbackSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.fullname")
+
     class Meta:
         model = Feedback
         fields = ("id", "title", "text", "user", "created_on")
@@ -48,12 +49,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class UserLessInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", 
-                  "fullname", 
-                  "brand_image", 
-                  "image", 
-                  "brand_name", 
-                  "bio"]
+        fields = ["id", "fullname", "brand_image", "image", "brand_name", "bio"]
 
 
 class UserCountSerializer(serializers.ModelSerializer):
@@ -204,6 +200,41 @@ class VerifyOTPRegisterSerializer(serializers.Serializer):
         }
 
 
+class VerifyOTPPhone(serializers.Serializer):
+    otp = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "phone", "otp", "tokens", "fullname"]
+
+    def validate(self, attrs):
+        phone = attrs.get("phone", "")
+        otp = attrs.get("otp", "")
+
+        users = User.objects.filter(phone=phone)
+
+        if not users.exists():
+            raise AuthenticationFailed("User not found")
+
+        user = users.first()
+        refresh = RefreshToken.for_user(user=user)
+        refresh_token = str(refresh)
+        access_token = str(refresh.access_token)
+
+        if not user.is_active:
+            raise AuthenticationFailed("Account has been disabled")
+        if user.otp != otp:
+            raise AuthenticationFailed("The OTP Code is invalid")
+
+        return {
+            "id": user.id,
+            "email": user.email,
+            "fullname": user.fullname,
+            "refresh_token": refresh_token,
+            "access_token": access_token,
+        }
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     followers_count = serializers.ReadOnlyField()
     following_count = serializers.ReadOnlyField()
@@ -225,6 +256,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "phone",
             "bio",
             "sex",
+            "region",
+            "subregion",
             "image",
             "country",
             "state",
@@ -236,6 +269,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "month",
             "year",
             "dob",
+            "is_verified",
             "followers_count",
             "followers",
             "following_count",
@@ -287,6 +321,7 @@ class LoginSerializer(serializers.ModelSerializer):
 
 class ListUserSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -315,6 +350,7 @@ class ListUserSerializer(serializers.ModelSerializer):
             "active",
             "created",
         )
+
     def get_is_following(self, user):
         if "request" in self.context:
             request = self.context["request"]
@@ -323,4 +359,3 @@ class ListUserSerializer(serializers.ModelSerializer):
             else:
                 return False
         return False
-
