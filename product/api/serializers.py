@@ -34,8 +34,8 @@ class CouponSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.brand_name")
     images = serializers.SerializerMethodField(method_name="get_images")
-    #category = serializers.SerializerMethodField()
-    #label = serializers.SerializerMethodField()
+    # category = serializers.SerializerMethodField()
+    # label = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -83,7 +83,7 @@ class ProductVariationDetailSerializer(serializers.ModelSerializer):
 
 
 class OrderProductSerializer(serializers.ModelSerializer):
-    #product_variations = serializers.SerializerMethodField()
+    # product_variations = serializers.SerializerMethodField()
     product = serializers.SerializerMethodField()
     final_price = serializers.SerializerMethodField()
 
@@ -202,6 +202,7 @@ class RantingSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField(method_name="get_user")
+    chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
     owner = serializers.ReadOnlyField(source="owner.fullname")
     category = serializers.SerializerMethodField()
     label = serializers.SerializerMethodField()
@@ -216,6 +217,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id",
+            "chat_created",
             "user",
             "owner",
             "title",
@@ -250,6 +252,13 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         total_rating = sum([review.rating for review in reviews])
         avg_rating = total_rating / num_reviews
         return avg_rating
+
+    def get_chat_created(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.owner.chats.filter(participants__id=request.user.id).exists()
+        else:
+            return False
 
     def get_category(self, obj):
         return obj.get_category_display()
@@ -363,14 +372,7 @@ class LineItemProductSerializer(serializers.ModelSerializer):
 class OrderUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "phone",
-            "fullname",
-            "account_type",
-            "address"
-        ]
+        fields = ["id", "email", "phone", "fullname", "account_type", "address"]
 
 
 class LineItemIndexSerializer(serializers.ModelSerializer):
@@ -390,14 +392,13 @@ class LineItemIndexSerializer(serializers.ModelSerializer):
             "price",
             "tracking_number",
             "quantity",
-            
         ]
 
 
 class MyLineItemIndexSerializer(serializers.ModelSerializer):
     products = OrderProductSerializer(many=True)
     user = OrderUserSerializer(many=False)
-    #order = OrderSerializer(many=False)
+    # order = OrderSerializer(many=False)
 
     class Meta:
         model = LineItem

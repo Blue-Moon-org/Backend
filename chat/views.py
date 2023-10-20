@@ -1,18 +1,13 @@
 from core.models import User
 from helper.utils import get_user_contact
 from rest_framework.response import Response
-from rest_framework import permissions
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Chat
 from rest_framework.views import APIView
 from .serializers import ChatSerializer
 
-from rest_framework.generics import (
-    RetrieveAPIView,
-    DestroyAPIView,
-    UpdateAPIView
-)
+from rest_framework.generics import RetrieveAPIView, DestroyAPIView, UpdateAPIView
 
 
 class ChatListView(APIView):
@@ -22,7 +17,7 @@ class ChatListView(APIView):
         contact = get_user_contact(request.user.id)
         chats = ChatSerializer(contact.chats.all(), many=True)
 
-        return Response({"status":True, "data":chats.data}, status=status.HTTP_200_OK)
+        return Response({"status": True, "data": chats.data}, status=status.HTTP_200_OK)
 
 
 class ChatDetailView(RetrieveAPIView):
@@ -30,48 +25,55 @@ class ChatDetailView(RetrieveAPIView):
     serializer_class = ChatSerializer
     permission_classes = [IsAuthenticated]
 
-        
 
 class ChatCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
         data = request.data
-        print(data)
         user = User.objects.get(id=request.user.id).id
         other_user = User.objects.get(id=data["id"]).id
 
         if other_user != user:
-
             my_contact = get_user_contact(user)
             other_contact = get_user_contact(other_user)
-            intersections = (Chat.objects.filter(participants=my_contact) & other_contact.chats.all())
-            #print(intersections)
+            intersections = (
+                Chat.objects.filter(participants=my_contact) & other_contact.chats.all()
+            )
+            # print(intersections)
             if not intersections.exists():
-                
                 chat = Chat.objects.create()
                 chat.participants.add(my_contact, other_contact)
                 chat.save()
                 serializer = ChatSerializer(chat)
 
-                return Response({
-                    "status": True, 
-                    "message": "New chat created successfully", 
-                    "data": serializer.data}, 
-                    status=status.HTTP_201_CREATED)
-            else: 
+                return Response(
+                    {
+                        "status": True,
+                        "message": "New chat created successfully",
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
                 serializer = ChatSerializer(intersections.first())
-                return Response({
-                    "status": True, 
-                    "message":"This chat already exist", 
-                    "data": serializer.data
-                    }, status=status.HTTP_201_CREATED)
+                return Response(
+                    {
+                        "status": True,
+                        "message": "This chat already exist",
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
         else:
-            return Response({
-                "status": False, 
-                "message":"You can't create chat with yourself", 
-                }, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "status": False,
+                    "message": "You can't create chat with yourself",
+                },
+                status=status.HTTP_200_OK,
+            )
+
 
 class ChatUpdateView(UpdateAPIView):
     queryset = Chat.objects.all()
@@ -90,7 +92,7 @@ class ChatDeleteView(DestroyAPIView):
 
 #     def post(self, request):
 #         data = request.data
-        
+
 #         serializer = ChatroomSerializer(data=data)
 #         if serializer.is_valid():
 #             serializer.save()
@@ -105,15 +107,15 @@ class ChatDeleteView(DestroyAPIView):
 #             )
 
 #             return Response({
-#                 "status": True, 
-#                 "message": "New chat created successfully", 
-#                 "data": serializer.data}, 
+#                 "status": True,
+#                 "message": "New chat created successfully",
+#                 "data": serializer.data},
 #                 status=status.HTTP_201_CREATED)
 #         else:
 
 #             return Response({
-#                 "status": False, 
-#                 "errors":serializer.errors,}, 
+#                 "status": False,
+#                 "errors":serializer.errors,},
 #                 status=status.HTTP_200_OK)
 
 # class ChatDetail(APIView):
@@ -121,7 +123,7 @@ class ChatDeleteView(DestroyAPIView):
 
 #     def put(self, request, pk):
 #         data = request.data
-        
+
 #         chatroom = Chatroom.objects.filter(id=pk)
 #         serializer = ChatroomSerializer(data=data, partial=True)
 #         if serializer.is_valid():
@@ -145,17 +147,16 @@ class ChatDeleteView(DestroyAPIView):
 #                     from_user=user,
 #                 )
 #             return Response({
-#                 "status": True, 
-#                 "message": "New chat created successfully", 
-#                 "data": serializer.data}, 
+#                 "status": True,
+#                 "message": "New chat created successfully",
+#                 "data": serializer.data},
 #                 status=status.HTTP_201_CREATED)
 #         else:
 
 #             return Response({
-#                 "status": False, 
-#                 "errors":serializer.errors,}, 
+#                 "status": False,
+#                 "errors":serializer.errors,},
 #                 status=status.HTTP_200_OK)
-    
 
 
 # class ChatroomViewSet(viewsets.ModelViewSet):
@@ -167,19 +168,18 @@ class ChatDeleteView(DestroyAPIView):
 #     def get_chatroom_chat_history(self, request):
 #         user = request.user
 #         chatroom = self.get_object()
-#         data = ChatroomSerializer(chatroom).data 
+#         data = ChatroomSerializer(chatroom).data
 #         return Response({'message': 'success', 'history': data})
 
 #     @action(methods=['patch'], detail=True, url_path='exit')
-#     def exit_chatroom(self, request, pk=None): 
-#         chatroom = self.get_object()   
+#     def exit_chatroom(self, request, pk=None):
+#         chatroom = self.get_object()
 
 #         user = request.user
-#         return Response({}) 
+#         return Response({})
 
 
 # class MessageViewSet(viewsets.ModelViewSet):
 #     permission_classes = [IsAuthenticated]
 #     queryset = Message.objects.all()
 #     serializer_class = ChatMessageSerializer
-

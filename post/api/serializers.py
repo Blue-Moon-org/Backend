@@ -35,6 +35,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField(method_name="get_url")
     images = serializers.SerializerMethodField(method_name="get_images")
     owner = serializers.SerializerMethodField(method_name="get_owner")
+    chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
     user_has_liked = serializers.SerializerMethodField(method_name="get_user_has_liked")
     user_has_favorited = serializers.SerializerMethodField(
         method_name="get_user_has_favorited"
@@ -58,6 +59,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "no_comments",
             "images",
             "url",
+            "chat_created",
             "user_has_liked",
             "user_has_favorited",
             "user_has_shared",
@@ -94,6 +96,12 @@ class PostDetailSerializer(serializers.ModelSerializer):
     def get_owner(self, obj):
         data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
         return data
+    
+    def get_chat_created(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.owner.chats.filter(participants__id=request.user.id).exists()
+        else: return False
 
     def get_user_has_liked(self, obj):
         request = self.context.get("request")
