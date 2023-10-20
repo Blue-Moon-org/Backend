@@ -35,7 +35,6 @@ class PostDetailSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField(method_name="get_url")
     images = serializers.SerializerMethodField(method_name="get_images")
     owner = serializers.SerializerMethodField(method_name="get_owner")
-    chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
     user_has_liked = serializers.SerializerMethodField(method_name="get_user_has_liked")
     user_has_favorited = serializers.SerializerMethodField(
         method_name="get_user_has_favorited"
@@ -59,7 +58,6 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "no_comments",
             "images",
             "url",
-            "chat_created",
             "user_has_liked",
             "user_has_favorited",
             "user_has_shared",
@@ -94,34 +92,34 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return data
 
     def get_owner(self, obj):
-        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
-        return data
-    
-    def get_chat_created(self, obj):
         request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return obj.owner.chats.filter(participants__id=request.user.id).exists()
-        else: return False
+        data = UserLessInfoSerializer(
+            User.objects.filter(id=obj.owner.id).first(), context={"request": request}
+        ).data
+        return data
 
     def get_user_has_liked(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.likes.filter(id=request.user.id).exists()
-        else: return False
+        else:
+            return False
 
     # New method to check if the current user has favorited the post
     def get_user_has_favorited(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.favourite.filter(id=request.user.id).exists()
-        else: return False
+        else:
+            return False
 
     # New method to check if the current user has shared the post
     def get_user_has_shared(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.shares.filter(id=request.user.id).exists()
-        else: return False
+        else:
+            return False
 
 
 class UserPostDetailSerializer(serializers.ModelSerializer):
@@ -180,7 +178,8 @@ class CommentSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             # print("User is in request")
             return obj.likes.filter(email=request.user.email).exists()
-        else: return False
+        else:
+            return False
 
     def get_likes(self, obj):
         return obj.likes.count()
@@ -193,12 +192,7 @@ class CommentDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ["id", 
-                  "body", 
-                  "owner", 
-                  "likes", 
-                  "user_has_liked", 
-                  "created"]
+        fields = ["id", "body", "owner", "likes", "user_has_liked", "created"]
         read_only_fields = [
             "likes",
             "user_has_liked",
@@ -217,7 +211,8 @@ class CommentDetailSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             print("User exists")
             return obj.likes.filter(email=request.user.email).exists()
-        else: return False
+        else:
+            return False
 
 
 class ImagesSerializer(serializers.ModelSerializer):

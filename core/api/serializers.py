@@ -47,9 +47,26 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 
 class UserLessInfoSerializer(serializers.ModelSerializer):
+    chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
+
     class Meta:
         model = User
-        fields = ["id", "fullname", "brand_image", "image", "brand_name", "bio"]
+        fields = [
+            "id",
+            "fullname",
+            "brand_image",
+            "image",
+            "brand_name",
+            "chat_created",
+            "bio",
+        ]
+
+    def get_chat_created(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.chats.filter(participants__id=request.user.id).exists()
+        else:
+            return False
 
 
 class UserCountSerializer(serializers.ModelSerializer):

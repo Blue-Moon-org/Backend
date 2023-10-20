@@ -202,8 +202,8 @@ class RantingSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField(method_name="get_user")
-    chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
-    owner = serializers.ReadOnlyField(source="owner.fullname")
+    owner = serializers.SerializerMethodField(method_name="get_owner")
+    #owner = serializers.ReadOnlyField(source="owner.fullname")
     category = serializers.SerializerMethodField()
     label = serializers.SerializerMethodField()
     variations = serializers.SerializerMethodField()
@@ -217,7 +217,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id",
-            "chat_created",
             "user",
             "owner",
             "title",
@@ -236,6 +235,10 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
         return data
+    
+    def get_owner(self, obj):
+        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
+        return data
 
     def get_images(self, obj):
         data = ProductImagesSerializer(
@@ -252,13 +255,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         total_rating = sum([review.rating for review in reviews])
         avg_rating = total_rating / num_reviews
         return avg_rating
-
-    def get_chat_created(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return obj.owner.chats.filter(participants__id=request.user.id).exists()
-        else:
-            return False
 
     def get_category(self, obj):
         return obj.get_category_display()
