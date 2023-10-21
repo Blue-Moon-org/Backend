@@ -59,7 +59,7 @@ class CheckPhoneView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, phone):
-        if not User.objects.filter(email=phone).exists():
+        if not User.objects.filter(phone=phone).exists():
             return Response(
                 {"status": True, "message": "Phone number is available"},
                 status=status.HTTP_200_OK,
@@ -68,7 +68,7 @@ class CheckPhoneView(generics.GenericAPIView):
         else:
             return Response(
                 {"error": {"status": False, "message": "Phone number already exists"}},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_200_OK,
             )
 
 
@@ -134,10 +134,9 @@ class VerifyEmail(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = VerifyOTPRegisterSerializer(data=request.data)
-        user_data = {}
+       
 
         if serializer.is_valid():
-            user_data = serializer.data
             email = serializer.data["email"]
             user = User.objects.get(email=email)
             refresh = RefreshToken.for_user(user=user)

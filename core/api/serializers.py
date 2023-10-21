@@ -190,7 +190,7 @@ class VerifyOTPRegisterSerializer(serializers.Serializer):
         fields = ["id", "email", "otp", "tokens", "fullname"]
 
     def validate(self, attrs):
-        email = attrs.get("email", "")
+        email = str(attrs.get("email", "")).lower()
         otp = attrs.get("otp", "")
 
         users = User.objects.filter(email=email)
