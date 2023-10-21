@@ -68,7 +68,7 @@ class CheckPhoneView(generics.GenericAPIView):
         else:
             return Response(
                 {"error": {"status": False, "message": "Phone number already exists"}},
-                status=status.HTTP_200_OK,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
