@@ -36,36 +36,20 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    other = serializers.SerializerMethodField(method_name="get_other")
+    
     participants = serializers.SerializerMethodField(method_name="get_participants")
-    owner = serializers.SerializerMethodField(method_name="get_owner")
+   
     
     last_message = serializers.SerializerMethodField("get_last_message")
 
     class Meta:
         model = Chat
-        fields = ('id', "room_name",'last_message', "owner", "other","participants")
+        fields = ('id', "room_name",'last_message', "participants")
         read_only = ('id')
-
-    def get_owner(self, obj):
-        request = self.context.get("request")
-        user = User.objects.filter(id=request.user.id).first()
-        print(f"Owner: {user}")
-        data = ContactSerializer(user, context={"request":request}).data
-        print(f"Owner: data {data}")
-        return data
-    
-    def get_other(self, obj):
-        request = self.context.get("request")
-        user = User.objects.exclude(chats__participants=request.user).first()
-        print(f"Other user: {user}")
-        data = ContactSerializer(user, context={"request":request}).data
-        print(f"Other data: {data}")
-        return data
     
     def get_participants(self, obj):
         request = self.context.get("request")
-        print(request)
+        # print(request)
         data = ContactSerializer(obj.participants, context={"request":request}, many=True).data
         
         return data
