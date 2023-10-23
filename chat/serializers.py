@@ -13,7 +13,7 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('fullname','profile_pic')
-        read_only_fields = ('id','fullname','profile_pic')
+        #read_only_fields = ('id','fullname','profile_pic')
 
     def get_profile_pic(self, obj):
         if obj.account_type == "Designer": pic = obj.brand_image_url
@@ -32,14 +32,15 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    
-    owner = serializers.SerializerMethodField(method_name="get_owner")
     other = serializers.SerializerMethodField(method_name="get_other")
+    participants = ContactSerializer(many=True)
+    owner = serializers.SerializerMethodField(method_name="get_owner")
+    
     last_message = serializers.SerializerMethodField("get_last_message")
 
     class Meta:
         model = Chat
-        fields = ('id', "room_name",'last_message', "owner", "other",)
+        fields = ('id', "room_name",'last_message', "owner", "other","participants")
         read_only = ('id')
 
     def get_owner(self, obj):
