@@ -9,10 +9,11 @@ class ContactSerializer(serializers.ModelSerializer):
 
     profile_pic = serializers.SerializerMethodField(method_name="get_profile_pic")
     fullname = serializers.SerializerMethodField(method_name="get_fullname")
+    owner = serializers.SerializerMethodField(method_name="get_owner")
 
     class Meta:
         model = User
-        fields = ('fullname','profile_pic')
+        fields = ('fullname','profile_pic', "owner")
         #read_only_fields = ('id','fullname','profile_pic')
 
     def get_profile_pic(self, obj):
@@ -21,8 +22,11 @@ class ContactSerializer(serializers.ModelSerializer):
         return pic
     
     def get_fullname(self, obj):
-        print(f"{obj.firstname} {obj.lastname}")
         return f"{obj.firstname} {obj.lastname}"
+    
+    def get_owner(self, obj):
+        request = self.context.get("request")
+        return obj == request.user
 
 class ChatMessageSerializer(serializers.ModelSerializer):
 
@@ -33,7 +37,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 class ChatSerializer(serializers.ModelSerializer):
     other = serializers.SerializerMethodField(method_name="get_other")
-    participants = ContactSerializer(many=True)
+    participants = serializers.SerializerMethodField(method_name="get_participants")
     owner = serializers.SerializerMethodField(method_name="get_owner")
     
     last_message = serializers.SerializerMethodField("get_last_message")
@@ -47,7 +51,7 @@ class ChatSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = User.objects.filter(id=request.user.id).first()
         print(f"Owner: {user}")
-        data = ContactSerializer(user).data
+        data = ContactSerializer(user, context={"request":request}).data
         print(f"Owner: data {data}")
         return data
     
@@ -55,8 +59,15 @@ class ChatSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = User.objects.exclude(chats__participants=request.user).first()
         print(f"Other user: {user}")
-        data = ContactSerializer(user).data
+        data = ContactSerializer(user, context={"request":request}).data
         print(f"Other data: {data}")
+        return data
+    
+    def get_participants(self, obj):
+        request = self.context.get("request")
+        print(request)
+        data = ContactSerializer(obj.participants, context={"request":request}, many=True).data
+        
         return data
 
     def create(self, validated_data):
