@@ -17,7 +17,7 @@ class ContactSerializer(serializers.ModelSerializer):
     def get_profile_pic(self, obj):
         print(obj.account_type)
         if obj.account_type == "Designer":
-            pic = obj.brand_image
+            pic = obj.brand_image_url
         else:
              pic = obj.image_url
 
