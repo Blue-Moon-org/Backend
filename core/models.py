@@ -133,6 +133,13 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.image.url
         else:
             return ""
+        
+    @property
+    def brand_image_url(self):
+        if self.brand_image and hasattr(self.brand_image, "url"):
+            return self.brand_image.url
+        else:
+            return ""
 
     @property
     def following_count(self):
