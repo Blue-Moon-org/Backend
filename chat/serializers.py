@@ -8,6 +8,7 @@ from core.models import User
 class ContactSerializer(serializers.ModelSerializer):
 
     profile_pic = serializers.SerializerMethodField(method_name="get_profile_pic")
+    fullname = serializers.SerializerMethodField(method_name="get_fullname")
 
     class Meta:
         model = User
@@ -15,13 +16,15 @@ class ContactSerializer(serializers.ModelSerializer):
         read_only_fields = ('id','fullname','profile_pic')
 
     def get_profile_pic(self, obj):
-        print(obj.account_type)
         if obj.account_type == "Designer":
             pic = obj.brand_image_url
         else:
              pic = obj.image_url
 
         return pic
+    
+    def get_fullname(self, obj):
+        return obj.firstname + " " + obj.lastname
 
 class ChatMessageSerializer(serializers.ModelSerializer):
 
