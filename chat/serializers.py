@@ -16,14 +16,12 @@ class ContactSerializer(serializers.ModelSerializer):
         read_only_fields = ('id','fullname','profile_pic')
 
     def get_profile_pic(self, obj):
-        if obj.account_type == "Designer":
-            pic = obj.brand_image_url
-        else:
-             pic = obj.image_url
-
+        if obj.account_type == "Designer": pic = obj.brand_image_url
+        else: pic = obj.image_url
         return pic
     
     def get_fullname(self, obj):
+        # print( obj.firstname,obj.lastname)
         return obj.firstname + " " + obj.lastname
 
 class ChatMessageSerializer(serializers.ModelSerializer):
@@ -51,7 +49,10 @@ class ChatSerializer(serializers.ModelSerializer):
     
     def get_other(self, obj):
         request = self.context.get("request")
-        data = ContactSerializer(User.objects.exclude(chats__participants=request.user.id).first()).data
+        user = User.objects.exclude(chats__participants=request.user.id).first()
+        print(f"Other user: {user}")
+        data = ContactSerializer(user).data
+        print(f"Other data: {data}")
         return data
 
     def create(self, validated_data):
