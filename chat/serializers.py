@@ -21,8 +21,8 @@ class ContactSerializer(serializers.ModelSerializer):
         return pic
     
     def get_fullname(self, obj):
-        # print( obj.firstname,obj.lastname)
-        return obj.firstname + " " + obj.lastname
+        print(f"{obj.firstname} {obj.lastname}")
+        return f"{obj.firstname} {obj.lastname}"
 
 class ChatMessageSerializer(serializers.ModelSerializer):
 
@@ -44,12 +44,15 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def get_owner(self, obj):
         request = self.context.get("request")
-        data = ContactSerializer(User.objects.filter(id=request.user.id).first()).data
+        user = User.objects.filter(id=request.user.id).first()
+        print(f"Owner: {user}")
+        data = ContactSerializer(user).data
+        print(f"Owner: data {data}")
         return data
     
     def get_other(self, obj):
         request = self.context.get("request")
-        user = User.objects.exclude(chats__participants=request.user.id).first()
+        user = User.objects.exclude(chats__participants=request.user).first()
         print(f"Other user: {user}")
         data = ContactSerializer(user).data
         print(f"Other data: {data}")
