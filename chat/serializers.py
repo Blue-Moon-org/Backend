@@ -1,5 +1,6 @@
 from chat.views import get_user_contact
 from .models import Chat,  Message
+from django.db.models import Q
 from rest_framework import serializers
 from core.models import User
 
@@ -25,13 +26,25 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    participants = ContactSerializer(many=True)
+    
+    owner = serializers.SerializerMethodField(method_name="get_owner")
+    other = serializers.SerializerMethodField(method_name="get_other")
     last_message = serializers.SerializerMethodField("get_last_message")
 
     class Meta:
         model = Chat
-        fields = ('id', "room_name",'last_message', 'participants')
+        fields = ('id', "room_name",'last_message', "owner", "other",)
         read_only = ('id')
+
+    def get_owner(self, obj):
+        request = self.context.get("request")
+        data = ContactSerializer(User.objects.filter(id=request.user.id).first()).data
+        return data
+    
+    def get_other(self, obj):
+        request = self.context.get("request")
+        data = ContactSerializer(User.objects.exclude(chats__participants=request.user.id).first()).data
+        return data
 
     def create(self, validated_data):
         participants = validated_data.pop('participants')

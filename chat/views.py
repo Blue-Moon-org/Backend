@@ -15,7 +15,7 @@ class ChatListView(APIView):
 
     def get(self, request):
         contact = get_user_contact(request.user.id)
-        chats = ChatSerializer(contact.chats.all(), many=True)
+        chats = ChatSerializer(contact.chats.all(), context={"request":request},many=True, )
 
         return Response({"status": True, "data": chats.data}, status=status.HTTP_200_OK)
 
@@ -45,7 +45,7 @@ class ChatCreateView(APIView):
                 chat = Chat.objects.create()
                 chat.participants.add(my_contact, other_contact)
                 chat.save()
-                serializer = ChatSerializer(chat)
+                serializer = ChatSerializer(chat, context={"request":request})
 
                 return Response(
                     {
@@ -56,7 +56,7 @@ class ChatCreateView(APIView):
                     status=status.HTTP_201_CREATED,
                 )
             else:
-                serializer = ChatSerializer(intersections.first())
+                serializer = ChatSerializer(intersections.first(), context={"request":request})
                 return Response(
                     {
                         "status": True,
