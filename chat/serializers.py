@@ -1,13 +1,12 @@
 from chat.views import get_user_contact
 from .models import Chat,  Message
-from django.db.models import Q
 from rest_framework import serializers
 from core.models import User
 
 
 
 class ContactSerializer(serializers.ModelSerializer):
-    # fullname = serializers.CharField('fullname')
+
     profile_pic = serializers.SerializerMethodField(method_name="get_profile_pic")
 
     class Meta:
@@ -16,7 +15,13 @@ class ContactSerializer(serializers.ModelSerializer):
         read_only_fields = ('id','fullname','profile_pic')
 
     def get_profile_pic(self, obj):
-        return obj.image_url
+        print(obj.account_type)
+        if obj.account_type == "Designer":
+            pic = obj.brand_image
+        else:
+             pic = obj.image_url
+
+        return pic
 
 class ChatMessageSerializer(serializers.ModelSerializer):
 
