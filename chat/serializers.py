@@ -38,8 +38,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     
     participants = serializers.SerializerMethodField(method_name="get_participants")
-   
-    
     last_message = serializers.SerializerMethodField("get_last_message")
 
     class Meta:
@@ -49,7 +47,6 @@ class ChatSerializer(serializers.ModelSerializer):
     
     def get_participants(self, obj):
         request = self.context.get("request")
-        # print(request)
         data = ContactSerializer(obj.participants, context={"request":request}, many=True).data
         
         return data
