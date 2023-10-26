@@ -2,6 +2,7 @@ from chat.views import get_user_contact
 from .models import Chat,  Message
 from rest_framework import serializers
 from core.models import User
+import json
 
 
 
@@ -30,11 +31,19 @@ class ContactSerializer(serializers.ModelSerializer):
 
 class ChatMessageSerializer(serializers.ModelSerializer):
 
+    content = serializers.SerializerMethodField("get_content")
+
     class Meta:
         model = Message
-        fields = ("content", "timestamp")
+        fields = ("content", "msg_type","timestamp")
 
+    def get_content(self, obj):
+        if obj.msg_type == "measure":
+            return json.loads(obj.content)
+        else:
+            return obj.content
 
+       
 class ChatSerializer(serializers.ModelSerializer):
     
     participants = serializers.SerializerMethodField(method_name="get_participants")

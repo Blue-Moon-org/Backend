@@ -121,7 +121,8 @@ class ChatConsumer(WebsocketConsumer):
         user_contact = get_user_contact(data['from'])
         message = Message.objects.create(
             contact=user_contact,
-            content=data['message'])
+            content=data['message'],
+            msg_type=data["msg_type"])
         current_chat = get_current_chat(data['chatId'])
         current_chat.messages.add(message)
         current_chat.save()
@@ -138,12 +139,24 @@ class ChatConsumer(WebsocketConsumer):
         return result
 
     def message_to_json(self, message):
-        return {
+        msg_type = message.msg_type
+        if msg_type == 'measure':
+            data = {
+            'id': message.id,
+            'author': message.contact.fullname,
+            'content': json.loads(message.content),
+            'msg_type':message.msg_type,
+            'timestamp': str(message.timestamp)
+        }
+        
+        else: data = {
             'id': message.id,
             'author': message.contact.fullname,
             'content': message.content,
+            'msg_type':message.msg_type,
             'timestamp': str(message.timestamp)
         }
+        return data
 
     commands = {
         'fetch_messages': fetch_messages,
@@ -173,8 +186,15 @@ class ChatConsumer(WebsocketConsumer):
 
     def receive(self, text_data):
         #print(text_data)
-        data = json.loads(text_data)        
-        self.commands[data['command']](self, data)
+        data = json.loads(text_data)  
+        # Check for the 'msg_type' field in the incoming message data
+        msg_type = data.get('msg_type', 'text')
+
+        # Call the appropriate handler based on the 'msg_type'
+        if msg_type == 'measure':
+            data["message"] = json.dumps(data["message"])     
+            self.commands[data['command']](self, data)
+        else: self.commands[data['command']](self, data)
 
     def send_chat_message(self, message):
         async_to_sync(self.channel_layer.group_send)(

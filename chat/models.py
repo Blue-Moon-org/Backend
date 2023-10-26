@@ -16,10 +16,16 @@ from django.db import models
 
 
 class Message(models.Model):
+    MSG_TYPE_CHOICES = (
+            ('image', 'image'), 
+            ('text', 'text'), 
+            ('measure', 'measure'),
+        )
     contact = models.ForeignKey(User, related_name='messages', on_delete=models.CASCADE)
     content = models.TextField()
     # msg = models.JSONField(default=str, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    msg_type = models.CharField(max_length=12, choices=MSG_TYPE_CHOICES, default="text")
 
     def __str__(self):
         return self.contact.fullname
