@@ -371,9 +371,21 @@ class OrderUserSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "phone", "fullname", "account_type", "address"]
 
 
+class OrderSellerrSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [ "id",
+            "fullname",
+            "brand_image",
+            "image",
+            "brand_name",
+            
+            ]
+
+
 class LineItemIndexSerializer(serializers.ModelSerializer):
     user = OrderUserSerializer(many=False)
-    seller = OrderUserSerializer(many=False)
+    seller = OrderSellerrSerializer(many=False)
     products = OrderProductSerializer(many=True)
 
     class Meta:
@@ -393,7 +405,7 @@ class LineItemIndexSerializer(serializers.ModelSerializer):
 
 class MyLineItemIndexSerializer(serializers.ModelSerializer):
     products = OrderProductSerializer(many=True)
-    user = OrderUserSerializer(many=False)
+    user = OrderSellerrSerializer(many=False)
     # order = OrderSerializer(many=False)
 
     class Meta:
