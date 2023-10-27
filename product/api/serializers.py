@@ -403,6 +403,17 @@ class LineItemIndexSerializer(serializers.ModelSerializer):
         ]
 
 
+class LineItemStatusSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = LineItem
+        fields = [
+            "id",
+            "order_status",
+            "tracking_number",
+        ]
+
+
 class MyLineItemIndexSerializer(serializers.ModelSerializer):
     products = OrderProductSerializer(many=True)
     user = OrderSellerrSerializer(many=False)

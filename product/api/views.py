@@ -883,25 +883,24 @@ class PaymentView(APIView):
 class OrderStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, pk):
-        cart = OrderProduct.objects.filter(
-            user=request.user,
-            ordered=True,
-        )
+    def get(self, request, tracking_number):
+        # cart = OrderProduct.objects.filter(
+        #     user=request.user,
+        #     ordered=True,
+        # )
         order_item = (
-            LineItem.objects.select_related("order")
-            .filter(order__user_id=request.user.id, pk=pk)
+            LineItem.objects
+            .filter(tracking_number=tracking_number)
             .first()
         )
         if order_item != None:
             context = {
                 "page_title": "Order Item #" + str(order_item.id) + " Status",
-                "cart": cart,
-                "order_item": order_item,
+                "order_status": order_item.order_status,
             }
             return Response({"data": context, "status": True})
         else:
-            return Response({"message": "Invalid Order", "status": False})
+            return Response({"message": "Invalid tracking_number", "status": False})
 
 
 class Checkout(APIView):

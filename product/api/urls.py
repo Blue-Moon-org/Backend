@@ -51,7 +51,7 @@ urlpatterns = [
     path("products/<pk>/", ProductDetailView.as_view(), name="product-detail"),
     path("add-to-cart/<slug>/", AddToCartView.as_view(), name="add-to-cart"),
     path("order-summary/", OrderDetailView.as_view(), name="order-summary"),
-    path("order-status/", OrderStatusView.as_view(), name="order-status"),
+    path("order-status/<str:tracking_number>/", OrderStatusView.as_view(), name="order-status"),
     path("checkout/", Checkout.as_view(), name="checkout"),
     path("add-coupon/", AddCouponView.as_view(), name="add-coupon"),
     path("orders/get_orders/", OrdersView.as_view()),
