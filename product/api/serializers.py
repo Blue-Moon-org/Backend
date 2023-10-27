@@ -417,6 +417,7 @@ class LineItemStatusSerializer(serializers.ModelSerializer):
 class MyLineItemIndexSerializer(serializers.ModelSerializer):
     products = OrderProductSerializer(many=True)
     user = OrderSellerrSerializer(many=False)
+    seller = OrderSellerrSerializer(many=False)
     # order = OrderSerializer(many=False)
 
     class Meta:
@@ -424,6 +425,7 @@ class MyLineItemIndexSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "user",
+            "seller",
             "products",
             "tracking_number",
             "quantity",
