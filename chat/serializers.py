@@ -38,7 +38,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         fields = ("content", "msg_type","timestamp")
 
     def get_content(self, obj):
-        if obj.msg_type == "measure":
+        if obj.msg_type == "measure" or obj.msg_type == 'image':
             return json.loads(obj.content)
         else:
             return obj.content

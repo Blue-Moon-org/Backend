@@ -36,13 +36,14 @@ class Chat(models.Model):
     room_name = models.CharField(max_length=50, unique=True)
 
     def generate_name(self):
-        # Generate a random string
-        random_string = ''.join(random.choices(string.ascii_lowercase, k=8))
-        # Get the current timestamp
-        timestamp = str(int(time.time()))
-        # Combine timestamp and random string to create a unique room name
-        unique_name = f"room_{timestamp}_{random_string}"
-        return unique_name
+        # Try to generate a unique room name
+        while True:
+            random_string = ''.join(random.choices(string.ascii_lowercase, k=8))
+            timestamp = str(int(time.time()))
+            unique_name = f"room_{timestamp}_{random_string}"
+            # Check if the generated room name is unique
+            if not Chat.objects.filter(room_name=unique_name).exists():
+                return unique_name
 
     def save(self, *args, **kwargs):
         if not self.room_name:
@@ -54,6 +55,16 @@ class Chat(models.Model):
         return self.room_name
     
 
+class ImageMessage(models.Model):
+    chat = models.ForeignKey(Chat, related_name="images", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="image_messages/")
+
+    @property
+    def image_url(self):
+        if self.image and hasattr(self.image, "url"):
+            return self.image.url
+        else:
+            return ""
 
 
 # def user_post_save(sender, instance, *arg, **kwargs):

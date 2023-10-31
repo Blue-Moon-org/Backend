@@ -3,7 +3,7 @@ from helper.utils import get_user_contact
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .models import Chat
+from .models import Chat, ImageMessage
 from rest_framework.views import APIView
 from .serializers import ChatSerializer
 
@@ -87,6 +87,32 @@ class ChatDeleteView(DestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
+
+class ImageMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        data = request.POST
+        data["chatId"]
+        chat = Chat.objects.get(id=data["chatId"])
+        images = request.FILES.getlist("images")
+        # Save each image associated with the post
+        imgs = []
+        for image in images:
+            img = ImageMessage.objects.create(chat=chat, image=image)
+            imgs.append(img.image_url)
+            img.save()
+        i = "Image" if len(imgs) < 2 else "Images"
+        return Response(
+            {
+                "status": True,
+                "message": f"{i} sent successfully",
+                "data": imgs,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+        
 # class ChatCreateView(APIView):
 #     permission_classes = [IsAuthenticated]
 

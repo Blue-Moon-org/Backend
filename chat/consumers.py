@@ -15,6 +15,10 @@ def get_last_10_messages(chatId):
     chat = get_object_or_404(Chat, id=chatId)
     return chat.messages.order_by('-timestamp').all()[:50]
 
+def get_last_message(chatId):
+    chat = get_object_or_404(Chat, id=chatId)
+    return chat.messages.order_by('-timestamp').all()[:1]
+
 
 def get_current_chat(chatId):
     return get_object_or_404(Chat, id=chatId)
@@ -309,8 +313,18 @@ class NewChatConsumer(WebsocketConsumer):
         self.send_chat_message(caller_username, content)
 
     def fetch_messages(self, data):
-        print("fetching")
+        
         messages = get_last_10_messages(data['chatId'])
+        content = {
+            'command': 'messages',
+            'messages': self.messages_to_json(messages),
+            'room_name': data["room_name"]
+        }
+        self.send_message(content)
+
+    def last_message(self, data):
+        
+        messages = get_last_message(data['chatId'])
         content = {
             'command': 'messages',
             'messages': self.messages_to_json(messages),
@@ -342,7 +356,7 @@ class NewChatConsumer(WebsocketConsumer):
 
     def message_to_json(self, message):
         msg_type = message.msg_type
-        if msg_type == 'measure':
+        if msg_type == 'measure' or msg_type == 'image':
             data = {
             'id': message.id,
             'author': message.contact.fullname,
@@ -362,6 +376,7 @@ class NewChatConsumer(WebsocketConsumer):
 
     commands = {
         'fetch_messages': fetch_messages,
+        'last_message': last_message,
         'new_message': new_message,
         'initiate_call': initiate_call,
         'accept_call': accept_call,
@@ -398,9 +413,10 @@ class NewChatConsumer(WebsocketConsumer):
         msg_type = data.get('msg_type', 'text')
 
         # Call the appropriate handler based on the 'msg_type'
-        if msg_type == 'measure':
+        if msg_type == 'measure' or msg_type == 'image':
             data["message"] = json.dumps(data["message"])     
             self.commands[data['command']](self, data)
+        
         else: self.commands[data['command']](self, data)
 
     def send_chat_message(self, message):
