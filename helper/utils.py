@@ -15,6 +15,8 @@ import uuid
 from chat.models import Chat  # , Contact
 from django.utils import timezone
 from core.models import User
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 CATEGORY = (
@@ -178,3 +180,25 @@ def designer_required(view_func):
             )
 
     return _wrapped_view
+
+
+# Define a TF-IDF vectorizer
+tfidf_vectorizer = TfidfVectorizer()
+from post.models import Post
+# Create a TF-IDF matrix for all posts
+tfidf_matrix = tfidf_vectorizer.fit_transform(Post.objects.values_list('body', flat=True))
+
+def calculate_cosine_similarity(post1, post2):
+    
+    # Get the indices of the posts in the database
+    index1 = post1.id - 1  # Assuming IDs are 1-based
+    index2 = post2.id - 1
+
+    # Get the TF-IDF vectors for the posts
+    tfidf_post1 = tfidf_matrix[index1]
+    tfidf_post2 = tfidf_matrix[index2]
+
+    # Calculate the cosine similarity between the TF-IDF vectors
+    similarity = cosine_similarity(tfidf_post1, tfidf_post2)[0][0]
+
+    return similarity

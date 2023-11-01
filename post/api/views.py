@@ -1,7 +1,11 @@
+from random import randint
 from notification.models import Notification
+from django.db.models import Q
+
+
 from post.models import Post  # , Comment, Category, LikedPost
 from core.models import User
-from helper.utils import CustomPagination
+from helper.utils import CustomPagination, calculate_cosine_similarity
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListAPIView
@@ -502,3 +506,51 @@ class LikedPostsView(ListAPIView):
         }
 
         return self.get_paginated_response(response_data)
+
+
+class PostRecommendationView(APIView):
+    def get(self, request, post, format=None):
+        try:
+            post = Post.objects.get(pk=post)
+        except Post.DoesNotExist:
+            return Response(
+                {"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        recommendations = self.get_recommendations(post)
+        recommendation_titles = [post.title for post in recommendations]
+        serializer = PostDetailSerializer(recommendations, many=True)
+
+        return Response(
+            {"status": True, "recommendations": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
+    def get_recommendations(self, post, num_recommendations=12):
+        total_posts = Post.objects.count()
+        n = 100
+        num_posts_to_select = min(
+            n, total_posts-1
+        )  # Limit the selection to available posts
+        random_indices = set()  # Create a set to store unique random indices
+        while len(random_indices) < num_posts_to_select:
+            random_index = randint(0, total_posts - 1)  # Generate a random index
+            random_indices.add(random_index)
+
+        random_indices = list(random_indices)  # Convert the set to a list
+        #print(random_indices)
+        similar_posts = (
+            Post.objects.exclude(id=post.id)
+            .filter(Q(category=post.category))
+            .filter(pk__in=random_indices)
+        )
+        similar_posts_with_similarity = [
+            (other_post, calculate_cosine_similarity(post, other_post))
+            for other_post in similar_posts
+        ]
+        similar_posts_with_similarity.sort(key=lambda x: x[1], reverse=True)
+        recommendations = [
+            similar_post[0]
+            for similar_post in similar_posts_with_similarity[:num_recommendations]
+        ]
+        return recommendations

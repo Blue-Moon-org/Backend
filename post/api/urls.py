@@ -14,6 +14,7 @@ from .views import (
     MyLikedPostsView,
     MyPostsNewView,
     LikedPostsView,
+    PostRecommendationView
 )
 
 urlpatterns = [
@@ -29,6 +30,7 @@ urlpatterns = [
     path('like-comment/<int:pk>/', LikeComment.as_view(), name='like-comment'),
     path('share/<int:pk>/', SharePost.as_view(), name='share-post'),
     path('favorite/<int:pk>/', FavoritePost.as_view(), name='favorite-post'),
+    path('see-more/<int:post>/', PostRecommendationView.as_view(), name='see-more-post'),
    # path('categories/', CategoryList.as_view(), name='category-list'),
    # path('categories/<int:pk>/', CategoryDetail.as_view(), name='category-detail'),
     path('comments/<int:pk>/', CommentList.as_view(), name='comment-list'),

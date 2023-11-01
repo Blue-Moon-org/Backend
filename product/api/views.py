@@ -703,6 +703,7 @@ class MyOrdersView(ListAPIView):
 
     def get_queryset(self):
         status = self.request.GET.get("status")
+        print(status)
         user = self.request.user
 
         if status is not None:
@@ -1201,3 +1202,4 @@ class CatalogueView(ListAPIView):
             "categoryData": category_data,
         }
         return self.get_paginated_response(response_data)
+
