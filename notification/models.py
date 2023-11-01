@@ -4,9 +4,6 @@ from core.models import User
 from helper.utils import time_ago
 
 
-
-
-
 class Notification(models.Model):
     TYPE_CHOICES = (
         ("DC", "deny_chat"),  # acccept chat*

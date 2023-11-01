@@ -7,21 +7,13 @@ from core.models import User
 from django.db import models
 
 
-# class Contact(models.Model):
-#     user = models.ForeignKey(User, related_name='friends', on_delete=models.CASCADE)
-#     friends = models.ManyToManyField('self', blank=True)
-
-#     def __str__(self):
-#         return self.user.fullname
-
-
 class Message(models.Model):
     MSG_TYPE_CHOICES = (
-            ('image', 'image'), 
-            ('text', 'text'), 
-            ('measure', 'measure'),
-        )
-    contact = models.ForeignKey(User, related_name='messages', on_delete=models.CASCADE)
+        ("image", "image"),
+        ("text", "text"),
+        ("measure", "measure"),
+    )
+    contact = models.ForeignKey(User, related_name="messages", on_delete=models.CASCADE)
     content = models.TextField()
     # msg = models.JSONField(default=str, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -30,15 +22,16 @@ class Message(models.Model):
     def __str__(self):
         return self.contact.fullname
 
+
 class Chat(models.Model):
-    participants = models.ManyToManyField(User, related_name='chats', blank=True)
+    participants = models.ManyToManyField(User, related_name="chats", blank=True)
     messages = models.ManyToManyField(Message, blank=True)
     room_name = models.CharField(max_length=50, unique=True)
 
     def generate_name(self):
         # Try to generate a unique room name
         while True:
-            random_string = ''.join(random.choices(string.ascii_lowercase, k=8))
+            random_string = "".join(random.choices(string.ascii_lowercase, k=8))
             timestamp = str(int(time.time()))
             unique_name = f"room_{timestamp}_{random_string}"
             # Check if the generated room name is unique
@@ -53,7 +46,7 @@ class Chat(models.Model):
 
     def __str__(self):
         return self.room_name
-    
+
 
 class ImageMessage(models.Model):
     chat = models.ForeignKey(Chat, related_name="images", on_delete=models.CASCADE)
@@ -77,11 +70,11 @@ class ImageMessage(models.Model):
 # class Chatroom(Model): # Chatroom == Group == one-to-one | on-to-many users
 
 #     TYPE_CHOICES = (
-#             ('W', 'Waiting'), 
-#             ('G', 'Granted'), 
+#             ('W', 'Waiting'),
+#             ('G', 'Granted'),
 #             ('D', 'Denied'),
 #         )
-        
+
 #     name = CharField(max_length=150)
 #     users = ManyToManyField(User, related_name='recipients')
 #     created_at = DateTimeField(auto_now_add=True)
@@ -101,7 +94,6 @@ class ImageMessage(models.Model):
 #     user = ForeignKey(User, related_name='request_owner', on_delete=CASCADE)
 #     chatroom = ForeignKey(Chatroom, related_name='request_target', on_delete=CASCADE)
 #     permission = models.CharField(max_length=32, choices=PermissionsTypes.choices, default=PermissionsTypes.WAITING)
-
 
 
 # class Message(Model):

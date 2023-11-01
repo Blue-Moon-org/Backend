@@ -133,7 +133,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.image.url
         else:
             return ""
-        
+
     @property
     def brand_image_url(self):
         if self.brand_image and hasattr(self.brand_image, "url"):

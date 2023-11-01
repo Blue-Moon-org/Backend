@@ -203,7 +203,7 @@ class RantingSerializer(serializers.ModelSerializer):
 class ProductDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField(method_name="get_user")
     owner = serializers.SerializerMethodField(method_name="get_owner")
-    #owner = serializers.ReadOnlyField(source="owner.fullname")
+    # owner = serializers.ReadOnlyField(source="owner.fullname")
     category = serializers.SerializerMethodField()
     label = serializers.SerializerMethodField()
     variations = serializers.SerializerMethodField()
@@ -235,7 +235,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
         return data
-    
+
     def get_owner(self, obj):
         data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
         return data
@@ -374,13 +374,13 @@ class OrderUserSerializer(serializers.ModelSerializer):
 class OrderSellerrSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = [ "id",
+        fields = [
+            "id",
             "fullname",
             "brand_image",
             "image",
             "brand_name",
-            
-            ]
+        ]
 
 
 class LineItemIndexSerializer(serializers.ModelSerializer):
@@ -404,7 +404,6 @@ class LineItemIndexSerializer(serializers.ModelSerializer):
 
 
 class LineItemStatusSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = LineItem
         fields = [

@@ -436,7 +436,8 @@ class MyPostsView(ListAPIView):
         }
 
         return self.get_paginated_response(response_data)
-    
+
+
 class MyPostsNewView(ListAPIView):
     serializer_class = PostDetailSerializer
     pagination_class = CustomPagination  # Use the custom pagination class
@@ -479,14 +480,14 @@ class MyLikedPostsView(ListAPIView):
         }
 
         return self.get_paginated_response(response_data)
-    
+
 
 class LikedPostsView(ListAPIView):
     serializer_class = PostDetailSerializer
     pagination_class = CustomPagination  # Use the custom pagination class
     permission_classes = [IsAuthenticated]
 
-    def list(self, request, id,*args, **kwargs):
+    def list(self, request, id, *args, **kwargs):
         queryset = Post.objects.filter(likes__id=id)
         page = self.paginate_queryset(queryset)
         if page is not None:

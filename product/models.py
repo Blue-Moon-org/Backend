@@ -1,5 +1,3 @@
-import random
-import string
 from django.db import models
 from django.shortcuts import reverse
 from django.utils.text import slugify
@@ -347,7 +345,7 @@ class Order(models.Model):
                     quantity=product.quantity,
                     price=product.get_final_price(),
                     order_number=order_number,
-                    seller=product.product.owner
+                    seller=product.product.owner,
                 )
                 line_item.save()
                 line_item.products.add(product)

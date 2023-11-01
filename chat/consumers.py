@@ -11,24 +11,25 @@ def get_user_contact(id):
     user = get_object_or_404(User, id=id)
     return user
 
+
 def get_last_10_messages(chatId):
     chat = get_object_or_404(Chat, id=chatId)
-    return chat.messages.order_by('-timestamp').all()[:50]
+    return chat.messages.order_by("-timestamp").all()[:50]
+
 
 def get_last_message(chatId):
     chat = get_object_or_404(Chat, id=chatId)
-    return chat.messages.order_by('-timestamp').all()[:1]
+    return chat.messages.order_by("-timestamp").all()[:1]
 
 
 def get_current_chat(chatId):
     return get_object_or_404(Chat, id=chatId)
 
+
 class ChatConsumer(WebsocketConsumer):
-
-
     def user_online(self, data):
         # Update the user's online status to True
-        user = get_user_contact(data['from'])
+        user = get_user_contact(data["from"])
         user.is_online = True
         user.save()
 
@@ -37,7 +38,7 @@ class ChatConsumer(WebsocketConsumer):
 
     def user_offline(self, data):
         # Update the user's online status to False
-        user = get_user_contact(data['from'])
+        user = get_user_contact(data["from"])
         user.is_online = False
         user.save()
 
@@ -46,40 +47,40 @@ class ChatConsumer(WebsocketConsumer):
 
     def user_typing(self, data):
         # Notify other users that this user is typing
-        sender = get_user_contact(data['from'])
-        chatroom = get_current_chat(data['chatId'])
+        sender = get_user_contact(data["from"])
+        chatroom = get_current_chat(data["chatId"])
         content = {
-            'command': 'typing',
-            'user': sender.fullname,
+            "command": "typing",
+            "user": sender.fullname,
         }
         self.send_chat_message(chatroom, content)
 
     def notify_user_online(self, user):
         # Notify other users that this user is online
         content = {
-            'command': 'online',
-            'user': user.fullname,
+            "command": "online",
+            "user": user.fullname,
         }
         self.broadcast_to_chatroom(user.username, content)
 
     def notify_user_offline(self, user):
         # Notify other users that this user is offline
         content = {
-            'command': 'offline',
-            'user': user.fullname,
+            "command": "offline",
+            "user": user.fullname,
         }
         return self.send_chat_message(content)
-        
+
     def initiate_call(self, data):
         # Extract necessary information from the data
-        caller = get_user_contact(data['from'])
-        recipient_username = data['to']
+        caller = get_user_contact(data["from"])
+        recipient_username = data["to"]
 
         # Create a call request message
         content = {
-            'command': 'initiate_call',
-            'caller': caller.fullname,
-            'recipient': recipient_username,
+            "command": "initiate_call",
+            "caller": caller.fullname,
+            "recipient": recipient_username,
         }
 
         # Send the call request to the recipient
@@ -87,13 +88,13 @@ class ChatConsumer(WebsocketConsumer):
 
     def accept_call(self, data):
         # Extract necessary information from the data
-        callee = get_user_contact(data['from'])
-        caller_username = data['caller']
+        callee = get_user_contact(data["from"])
+        caller_username = data["caller"]
 
         # Create a call accepted response
         content = {
-            'command': 'accept_call',
-            'callee': callee.fullname,
+            "command": "accept_call",
+            "callee": callee.fullname,
         }
 
         # Send the call accepted response to the caller
@@ -101,39 +102,32 @@ class ChatConsumer(WebsocketConsumer):
 
     def reject_call(self, data):
         # Extract necessary information from the data
-        callee = get_user_contact(data['from'])
-        caller_username = data['caller']
+        callee = get_user_contact(data["from"])
+        caller_username = data["caller"]
 
         # Create a call rejected response
         content = {
-            'command': 'reject_call',
-            'callee': callee.fullname,
+            "command": "reject_call",
+            "callee": callee.fullname,
         }
 
         # Send the call rejected response to the caller
         self.send_chat_message(caller_username, content)
 
     def fetch_messages(self, data):
-        messages = get_last_10_messages(data['chatId'])
-        content = {
-            'command': 'messages',
-            'messages': self.messages_to_json(messages)
-        }
+        messages = get_last_10_messages(data["chatId"])
+        content = {"command": "messages", "messages": self.messages_to_json(messages)}
         self.send_message(content)
 
     def new_message(self, data):
-        user_contact = get_user_contact(data['from'])
+        user_contact = get_user_contact(data["from"])
         message = Message.objects.create(
-            contact=user_contact,
-            content=data['message'],
-            msg_type=data["msg_type"])
-        current_chat = get_current_chat(data['chatId'])
+            contact=user_contact, content=data["message"], msg_type=data["msg_type"]
+        )
+        current_chat = get_current_chat(data["chatId"])
         current_chat.messages.add(message)
         current_chat.save()
-        content = {
-            'command': 'new_message',
-            'message': self.message_to_json(message)
-        }
+        content = {"command": "new_message", "message": self.message_to_json(message)}
         return self.send_chat_message(content)
 
     def messages_to_json(self, messages):
@@ -144,101 +138,92 @@ class ChatConsumer(WebsocketConsumer):
 
     def message_to_json(self, message):
         msg_type = message.msg_type
-        if msg_type == 'measure':
+        if msg_type == "measure":
             data = {
-            'id': message.id,
-            'author': message.contact.fullname,
-            'content': json.loads(message.content),
-            'msg_type':message.msg_type,
-            'timestamp': str(message.timestamp)
-        }
-        
-        else: data = {
-            'id': message.id,
-            'author': message.contact.fullname,
-            'content': message.content,
-            'msg_type':message.msg_type,
-            'timestamp': str(message.timestamp)
-        }
+                "id": message.id,
+                "author": message.contact.fullname,
+                "content": json.loads(message.content),
+                "msg_type": message.msg_type,
+                "timestamp": str(message.timestamp),
+            }
+
+        else:
+            data = {
+                "id": message.id,
+                "author": message.contact.fullname,
+                "content": message.content,
+                "msg_type": message.msg_type,
+                "timestamp": str(message.timestamp),
+            }
         return data
 
     commands = {
-        'fetch_messages': fetch_messages,
-        'new_message': new_message,
-        'initiate_call': initiate_call,
-        'accept_call': accept_call,
-        'reject_call': reject_call,
-        'online': user_online,
-        'offline': user_offline,
-        'typing': user_typing,
+        "fetch_messages": fetch_messages,
+        "new_message": new_message,
+        "initiate_call": initiate_call,
+        "accept_call": accept_call,
+        "reject_call": reject_call,
+        "online": user_online,
+        "offline": user_offline,
+        "typing": user_typing,
     }
 
     def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
+        self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
+        self.room_group_name = "chat_%s" % self.room_name
         async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
+            self.room_group_name, self.channel_name
         )
         self.accept()
 
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
+            self.room_group_name, self.channel_name
         )
 
     def receive(self, text_data):
-        #print(text_data)
-        data = json.loads(text_data)  
+        # print(text_data)
+        data = json.loads(text_data)
         # Check for the 'msg_type' field in the incoming message data
-        msg_type = data.get('msg_type', 'text')
+        msg_type = data.get("msg_type", "text")
 
         # Call the appropriate handler based on the 'msg_type'
-        if msg_type == 'measure':
-            data["message"] = json.dumps(data["message"])     
-            self.commands[data['command']](self, data)
-        else: self.commands[data['command']](self, data)
+        if msg_type == "measure":
+            data["message"] = json.dumps(data["message"])
+            self.commands[data["command"]](self, data)
+        else:
+            self.commands[data["command"]](self, data)
 
     def send_chat_message(self, message):
         async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
+            self.room_group_name, {"type": "chat_message", "message": message}
         )
 
     def send_message(self, message):
         self.send(text_data=json.dumps(message))
 
     def chat_message(self, event):
-        message = event['message']
+        message = event["message"]
         self.send(text_data=json.dumps(message))
 
 
-
-
 class NewChatConsumer(WebsocketConsumer):
-
-
     def user_online(self, data):
         # Update the user's online status to True
-        user = get_user_contact(data['from'])
+        user = get_user_contact(data["from"])
         user.is_online = True
         user.save()
-         # Notify other users that this user is online
+        # Notify other users that this user is online
         content = {
-            'command': 'user_online',
-            'room_name':data["room_name"],
-            'message': f'{user.fullname} is online',
+            "command": "user_online",
+            "room_name": data["room_name"],
+            "message": f"{user.fullname} is online",
         }
         return self.send_chat_message(content)
 
-
     def user_offline(self, data):
         # Update the user's online status to False
-        user = get_user_contact(data['from'])
+        user = get_user_contact(data["from"])
         user.is_online = False
         user.save()
 
@@ -247,36 +232,35 @@ class NewChatConsumer(WebsocketConsumer):
 
     def typing(self, data):
         # Notify other users that this user is typing
-        sender = get_user_contact(data['from'])
-        chatroom = get_current_chat(data['chatId'])
+        sender = get_user_contact(data["from"])
+        chatroom = get_current_chat(data["chatId"])
         content = {
-            'command': 'typing',
-            'user': f'{sender.fullname} is typing',
-            'room_name':data["room_name"]
+            "command": "typing",
+            "user": f"{sender.fullname} is typing",
+            "room_name": data["room_name"],
         }
         self.send_chat_message(chatroom, content)
 
     def notify_user_online(self, user):
-    
-    # def notify_user_offline(self, user):
+        # def notify_user_offline(self, user):
         # Notify other users that this user is offline
         content = {
-            'command': 'offline',
-            'user': user.fullname,
+            "command": "offline",
+            "user": user.fullname,
         }
         return self.send_chat_message(content)
-        
+
     def initiate_call(self, data):
         # Extract necessary information from the data
-        caller = get_user_contact(data['from'])
-        recipient_username = data['to']
+        caller = get_user_contact(data["from"])
+        recipient_username = data["to"]
 
         # Create a call request message
         content = {
-            'command': 'initiate_call',
-            'caller': caller.fullname,
-            'recipient': recipient_username,
-            'room_name': data["room_name"]
+            "command": "initiate_call",
+            "caller": caller.fullname,
+            "recipient": recipient_username,
+            "room_name": data["room_name"],
         }
 
         # Send the call request to the recipient
@@ -284,14 +268,14 @@ class NewChatConsumer(WebsocketConsumer):
 
     def accept_call(self, data):
         # Extract necessary information from the data
-        callee = get_user_contact(data['from'])
-        caller_username = data['caller']
+        callee = get_user_contact(data["from"])
+        caller_username = data["caller"]
 
         # Create a call accepted response
         content = {
-            'command': 'accept_call',
-            'callee': callee.fullname,
-            'room_name':data["room_name"]
+            "command": "accept_call",
+            "callee": callee.fullname,
+            "room_name": data["room_name"],
         }
 
         # Send the call accepted response to the caller
@@ -299,52 +283,49 @@ class NewChatConsumer(WebsocketConsumer):
 
     def reject_call(self, data):
         # Extract necessary information from the data
-        callee = get_user_contact(data['from'])
-        caller_username = data['caller']
+        callee = get_user_contact(data["from"])
+        caller_username = data["caller"]
 
         # Create a call rejected response
         content = {
-            'command': 'reject_call',
-            'callee': callee.fullname,
-            'room_name':data["room_name"]
+            "command": "reject_call",
+            "callee": callee.fullname,
+            "room_name": data["room_name"],
         }
 
         # Send the call rejected response to the caller
         self.send_chat_message(caller_username, content)
 
     def fetch_messages(self, data):
-        
-        messages = get_last_10_messages(data['chatId'])
+        messages = get_last_10_messages(data["chatId"])
         content = {
-            'command': 'messages',
-            'messages': self.messages_to_json(messages),
-            'room_name': data["room_name"]
+            "command": "messages",
+            "messages": self.messages_to_json(messages),
+            "room_name": data["room_name"],
         }
         self.send_message(content)
 
     def last_message(self, data):
-        
-        messages = get_last_message(data['chatId'])
+        messages = get_last_message(data["chatId"])
         content = {
-            'command': 'messages',
-            'messages': self.messages_to_json(messages),
-            'room_name': data["room_name"]
+            "command": "messages",
+            "messages": self.messages_to_json(messages),
+            "room_name": data["room_name"],
         }
         self.send_message(content)
 
     def new_message(self, data):
-        user_contact = get_user_contact(data['from'])
+        user_contact = get_user_contact(data["from"])
         message = Message.objects.create(
-            contact=user_contact,
-            content=data['message'],
-            msg_type=data["msg_type"])
-        current_chat = get_current_chat(data['chatId'])
+            contact=user_contact, content=data["message"], msg_type=data["msg_type"]
+        )
+        current_chat = get_current_chat(data["chatId"])
         current_chat.messages.add(message)
         current_chat.save()
         content = {
-            'command': 'new_message',
-            'message': self.message_to_json(message),
-            'room_name':data["room_name"]
+            "command": "new_message",
+            "message": self.message_to_json(message),
+            "room_name": data["room_name"],
         }
         return self.send_chat_message(content)
 
@@ -356,46 +337,46 @@ class NewChatConsumer(WebsocketConsumer):
 
     def message_to_json(self, message):
         msg_type = message.msg_type
-        if msg_type == 'measure' or msg_type == 'image':
+        if msg_type == "measure" or msg_type == "image":
             data = {
-            'id': message.id,
-            'author': message.contact.fullname,
-            'content': json.loads(message.content),
-            'msg_type':message.msg_type,
-            'timestamp': str(message.timestamp)
-        }
-        
-        else: data = {
-            'id': message.id,
-            'author': message.contact.fullname,
-            'content': message.content,
-            'msg_type':message.msg_type,
-            'timestamp': str(message.timestamp)
-        }
+                "id": message.id,
+                "author": message.contact.fullname,
+                "content": json.loads(message.content),
+                "msg_type": message.msg_type,
+                "timestamp": str(message.timestamp),
+            }
+
+        else:
+            data = {
+                "id": message.id,
+                "author": message.contact.fullname,
+                "content": message.content,
+                "msg_type": message.msg_type,
+                "timestamp": str(message.timestamp),
+            }
         return data
 
     commands = {
-        'fetch_messages': fetch_messages,
-        'last_message': last_message,
-        'new_message': new_message,
-        'initiate_call': initiate_call,
-        'accept_call': accept_call,
-        'reject_call': reject_call,
-        'online': user_online,
-        'offline': user_offline,
-        'typing': typing,
+        "fetch_messages": fetch_messages,
+        "last_message": last_message,
+        "new_message": new_message,
+        "initiate_call": initiate_call,
+        "accept_call": accept_call,
+        "reject_call": reject_call,
+        "online": user_online,
+        "offline": user_offline,
+        "typing": typing,
     }
 
     def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['id']
+        self.room_name = self.scope["url_route"]["kwargs"]["id"]
         rooms = Chat.objects.filter(participants=self.room_name)
-        #print(rooms)
+        # print(rooms)
         if rooms.exists():
             for room in rooms:
-                room_group_name = f'chat_{room.room_name}'
+                room_group_name = f"chat_{room.room_name}"
                 async_to_sync(self.channel_layer.group_add)(
-                    room_group_name,
-                    self.channel_name
+                    room_group_name, self.channel_name
                 )
         self.accept()
 
@@ -407,30 +388,27 @@ class NewChatConsumer(WebsocketConsumer):
         # )
 
     def receive(self, text_data):
-        #print(text_data)
-        data = json.loads(text_data)  
+        # print(text_data)
+        data = json.loads(text_data)
         # Check for the 'msg_type' field in the incoming message data
-        msg_type = data.get('msg_type', 'text')
+        msg_type = data.get("msg_type", "text")
 
         # Call the appropriate handler based on the 'msg_type'
-        if msg_type == 'measure' or msg_type == 'image':
-            data["message"] = json.dumps(data["message"])     
-            self.commands[data['command']](self, data)
-        
-        else: self.commands[data['command']](self, data)
+        if msg_type == "measure" or msg_type == "image":
+            data["message"] = json.dumps(data["message"])
+            self.commands[data["command"]](self, data)
+
+        else:
+            self.commands[data["command"]](self, data)
 
     def send_chat_message(self, message):
         async_to_sync(self.channel_layer.group_send)(
-            f"chat_{message['room_name']}",
-            {
-                'type': 'chat_message',
-                'message': message
-            }
+            f"chat_{message['room_name']}", {"type": "chat_message", "message": message}
         )
 
     def send_message(self, message):
         self.send(text_data=json.dumps(message))
 
     def chat_message(self, event):
-        message = event['message']
+        message = event["message"]
         self.send(text_data=json.dumps(message))

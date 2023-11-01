@@ -12,10 +12,9 @@ import threading
 import datetime
 from django.http import HttpResponseForbidden
 import uuid
-from chat.models import Chat#, Contact
+from chat.models import Chat  # , Contact
 from django.utils import timezone
 from core.models import User
-
 
 
 CATEGORY = (
@@ -24,6 +23,7 @@ CATEGORY = (
     ("Native", "Native"),
     ("Ankara", "Ankara"),
 )
+
 
 def pluralize(value, unit):
     if value == 1:
@@ -61,11 +61,14 @@ def gen_tracking_number(LineItem):
     length = 15
     while True:
         # Generate a random tracking number with uppercase letters and digits
-        tracking_number = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+        tracking_number = "".join(
+            random.choices(string.ascii_uppercase + string.digits, k=length)
+        )
 
         # Check if the generated tracking number already exists in the database
         if not LineItem.objects.filter(tracking_number=tracking_number).exists():
             return tracking_number
+
 
 def slug_generator(
     size: int = 10, char: str = digits + ascii_uppercase + ascii_lowercase
@@ -81,9 +84,10 @@ def get_random_code():
     code = str(uuid.uuid4())[:8].replace("-", " ").lower()
     return code
 
+
 def get_last_10_messages(chatId):
     chat = get_object_or_404(Chat, id=chatId)
-    return chat.messages.order_by('-timestamp').all()[:10]
+    return chat.messages.order_by("-timestamp").all()[:10]
 
 
 def get_user_contact(id):
@@ -93,6 +97,7 @@ def get_user_contact(id):
 
 def get_current_chat(chatId):
     return get_object_or_404(Chat, id=chatId)
+
 
 class EmailThread(threading.Thread):
     def __init__(self, email):
@@ -115,7 +120,6 @@ class Util:
         EmailThread(email).start()
 
 
-
 DEFAULT_PAGE = 1
 DEFAULT_PAGE_SIZE = 18
 
@@ -123,26 +127,29 @@ DEFAULT_PAGE_SIZE = 18
 class CustomPagination(PageNumberPagination):
     page = DEFAULT_PAGE
     page_size = DEFAULT_PAGE_SIZE
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
 
     def get_paginated_response(self, data):
-        return Response({
-            'data': data,
-            'meta': {
-                'all_data': self.page.paginator.count,
-                'page': int(self.request.GET.get('page', DEFAULT_PAGE)),
-                'page_size': int(self.request.GET.get('page_size', self.page_size)),
-                'next':self.get_next_link(),
-                'previous':self.get_previous_link()
+        return Response(
+            {
+                "data": data,
+                "meta": {
+                    "all_data": self.page.paginator.count,
+                    "page": int(self.request.GET.get("page", DEFAULT_PAGE)),
+                    "page_size": int(self.request.GET.get("page_size", self.page_size)),
+                    "next": self.get_next_link(),
+                    "previous": self.get_previous_link(),
+                },
             }
-        })
+        )
+
 
 def get_timezone_datetime():
     current_date = datetime.datetime.now()
-    current_date = current_date.\
-        replace(tzinfo=datetime.timezone.utc)
+    current_date = current_date.replace(tzinfo=datetime.timezone.utc)
 
     return current_date.isoformat()
+
 
 def generate_transaction_id(user_id):
     # Get the current timestamp (in milliseconds)
@@ -155,15 +162,19 @@ def generate_transaction_id(user_id):
     transaction_id = f"{unique_id}-{timestamp}-{random_number}"
     return transaction_id
 
+
 def designer_required(view_func):
     """
     Decorator that allows only designer-type users to access the view.
     """
+
     def _wrapped_view(request, *args, **kwargs):
         # Check if the user is authenticated and has the account_type set to "Designer"
         if request.user.is_authenticated and request.user.account_type == User.DESIGNER:
             return view_func(request, *args, **kwargs)
         else:
-            return HttpResponseForbidden("Access Denied: Only designer-type users are allowed to access this page.")
+            return HttpResponseForbidden(
+                "Access Denied: Only designer-type users are allowed to access this page."
+            )
 
     return _wrapped_view
