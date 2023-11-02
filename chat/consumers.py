@@ -319,7 +319,6 @@ class NewChatConsumer(WebsocketConsumer):
         )
        
         log.info(chats.data[0].keys())
-
         # sorted_messages = sorted(
         #     chats.data, key=lambda x: x['last_message']['timestamp'], reverse=True
         # )
