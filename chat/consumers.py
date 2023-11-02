@@ -1,3 +1,4 @@
+import logging
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
@@ -6,7 +7,7 @@ from chat.models import Chat, Message
 from chat.serializers import ChatListSerializer, ChatSerializer
 
 from core.models import User
-
+log = logging.getLogger(__name__)
 
 def get_user_contact(id):
     user = get_object_or_404(User, id=id)
@@ -315,7 +316,8 @@ class NewChatConsumer(WebsocketConsumer):
             many=True,
         )
         data = chats.data
-        print(data)
+        log.info(data[0])
+
         sorted_messages = sorted(data, key=lambda x: x["last_message"]["timestamp"], reverse=True)
         content = {
             "command": "chat_list",
