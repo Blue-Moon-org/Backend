@@ -5,6 +5,31 @@ from core.models import User
 import json
 
 
+class ContactListSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.SerializerMethodField(method_name="get_profile_pic")
+    fullname = serializers.SerializerMethodField(method_name="get_fullname")
+    owner = serializers.SerializerMethodField(method_name="get_owner")
+
+    class Meta:
+        model = User
+        fields = ("fullname", "profile_pic", "owner")
+        # read_only_fields = ('id','fullname','profile_pic')
+
+    def get_profile_pic(self, obj):
+        if obj.account_type == "Designer":
+            pic = obj.brand_image_url
+        else:
+            pic = obj.image_url
+        return pic
+
+    def get_fullname(self, obj):
+        return f"{obj.firstname} {obj.lastname}"
+
+    def get_owner(self, obj):
+        user = self.context.get("user")
+        return obj == user
+
+
 class ContactSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField(method_name="get_profile_pic")
     fullname = serializers.SerializerMethodField(method_name="get_fullname")
@@ -59,6 +84,38 @@ class ChatSerializer(serializers.ModelSerializer):
             obj.participants, context={"request": request}, many=True
         ).data
 
+        return data
+
+    def create(self, validated_data):
+        participants = validated_data.pop("participants")
+        chat = Chat()
+        chat.save()
+        for nickname in participants:
+            user = get_user_contact(nickname)
+            chat.participants.add(user)
+        chat.save()
+        return chat
+
+    def get_last_message(self, obj):
+        if len(list(obj.messages.all())) < 1:
+            return {}
+        return ChatMessageSerializer(list(obj.messages.all())[-1]).data
+
+
+class ChatListSerializer(serializers.ModelSerializer):
+    participants = serializers.SerializerMethodField(method_name="get_participants")
+    last_message = serializers.SerializerMethodField("get_last_message")
+
+    class Meta:
+        model = Chat
+        fields = ("id", "room_name", "last_message", "participants")
+        read_only = "id"
+
+    def get_participants(self, obj):
+        user = self.context.get("user")
+        data = ContactListSerializer(
+            obj.participants, context={"user": user}, many=True
+        ).data
         return data
 
     def create(self, validated_data):

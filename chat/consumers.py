@@ -3,6 +3,7 @@ from channels.generic.websocket import WebsocketConsumer
 import json
 from django.shortcuts import get_object_or_404
 from chat.models import Chat, Message
+from chat.serializers import ChatListSerializer, ChatSerializer
 
 from core.models import User
 
@@ -305,11 +306,29 @@ class NewChatConsumer(WebsocketConsumer):
         }
         self.send_message(content)
 
+    def chat_list(self, data):
+        contact = get_user_contact(self.room_name)
+        
+        chats = ChatListSerializer(
+            contact.chats.all(),
+            context={"user": contact},
+            many=True,
+        )
+        data = chats.data
+        print(data)
+        sorted_messages = sorted(data, key=lambda x: x["last_message"]["timestamp"], reverse=True)
+        content = {
+            "command": "chat_list",
+            "messages": sorted_messages,
+            
+        }
+        self.send_message(content)
+
     def last_message(self, data):
         messages = get_last_message(data["chatId"])
         content = {
             "command": "last_message",
-            "messages": self.messages_to_json(messages),
+            "messages": self.messages_to_json(messages, data["room_name"]),
             "room_name": data["room_name"],
         }
         self.send_message(content)
@@ -329,13 +348,13 @@ class NewChatConsumer(WebsocketConsumer):
         }
         return self.send_chat_message(content)
 
-    def messages_to_json(self, messages):
+    def messages_to_json(self, messages, room_name=None):
         result = []
         for message in messages:
-            result.append(self.message_to_json(message))
+            result.append(self.message_to_json(message, room_name))
         return result
 
-    def message_to_json(self, message):
+    def message_to_json(self, message, room_name=None):
         msg_type = message.msg_type
         if msg_type == "measure" or msg_type == "image":
             data = {
@@ -344,6 +363,7 @@ class NewChatConsumer(WebsocketConsumer):
                 "content": json.loads(message.content),
                 "msg_type": message.msg_type,
                 "timestamp": str(message.timestamp),
+                "room_name":room_name
             }
 
         else:
@@ -353,11 +373,13 @@ class NewChatConsumer(WebsocketConsumer):
                 "content": message.content,
                 "msg_type": message.msg_type,
                 "timestamp": str(message.timestamp),
+                "room_name":room_name
             }
         return data
 
     commands = {
         "fetch_messages": fetch_messages,
+        "chat_list": chat_list,
         "last_message": last_message,
         "new_message": new_message,
         "initiate_call": initiate_call,
