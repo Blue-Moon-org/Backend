@@ -316,9 +316,9 @@ class NewChatConsumer(WebsocketConsumer):
             many=True,
         )
         data = chats.data
-        log.info(data[0])
+        #log.info(dict(data[0]))
 
-        sorted_messages = sorted(data, key=lambda x: x["last_message"]["timestamp"], reverse=True)
+        sorted_messages = sorted(data, key=lambda x: dict(x)["last_message"]["timestamp"], reverse=True)
         content = {
             "command": "chat_list",
             "messages": sorted_messages,
