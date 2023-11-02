@@ -318,14 +318,14 @@ class NewChatConsumer(WebsocketConsumer):
             many=True,
         )
        
-        log.info(dict(chats.data[0]))
+        log.info(chats.data[0].keys())
 
-        sorted_messages = sorted(
-            chats.data, key=lambda x: x['last_message']['timestamp'], reverse=True
-        )
+        # sorted_messages = sorted(
+        #     chats.data, key=lambda x: x['last_message']['timestamp'], reverse=True
+        # )
         content = {
             "command": "chat_list",
-            "messages": sorted_messages,
+            "messages": chats.data,
         }
         self.send_message(content)
 
