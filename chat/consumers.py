@@ -7,7 +7,9 @@ from chat.models import Chat, Message
 from chat.serializers import ChatListSerializer, ChatSerializer
 
 from core.models import User
+
 log = logging.getLogger(__name__)
+
 
 def get_user_contact(id):
     user = get_object_or_404(User, id=id)
@@ -309,20 +311,21 @@ class NewChatConsumer(WebsocketConsumer):
 
     def chat_list(self, data):
         contact = get_user_contact(self.room_name)
-        
+
         chats = ChatListSerializer(
             contact.chats.all(),
             context={"user": contact},
             many=True,
         )
-        data = chats.data
-        #log.info(dict(data[0]))
+       
+        log.info(dict(chats.data[0]))
 
-        sorted_messages = sorted(data, key=lambda x: dict(x)["last_message"]["timestamp"], reverse=True)
+        sorted_messages = sorted(
+            chats.data, key=lambda x: x['last_message']['timestamp'], reverse=True
+        )
         content = {
             "command": "chat_list",
             "messages": sorted_messages,
-            
         }
         self.send_message(content)
 
@@ -365,7 +368,7 @@ class NewChatConsumer(WebsocketConsumer):
                 "content": json.loads(message.content),
                 "msg_type": message.msg_type,
                 "timestamp": str(message.timestamp),
-                "room_name":room_name
+                "room_name": room_name,
             }
 
         else:
@@ -375,7 +378,7 @@ class NewChatConsumer(WebsocketConsumer):
                 "content": message.content,
                 "msg_type": message.msg_type,
                 "timestamp": str(message.timestamp),
-                "room_name":room_name
+                "room_name": room_name,
             }
         return data
 
