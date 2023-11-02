@@ -308,7 +308,7 @@ class NewChatConsumer(WebsocketConsumer):
     def last_message(self, data):
         messages = get_last_message(data["chatId"])
         content = {
-            "command": "messages",
+            "command": "last_message",
             "messages": self.messages_to_json(messages),
             "room_name": data["room_name"],
         }
