@@ -4,7 +4,7 @@ from channels.generic.websocket import WebsocketConsumer
 import json
 from django.shortcuts import get_object_or_404
 from chat.models import Chat, Message
-from chat.serializers import ChatListSerializer, ChatSerializer
+from chat.serializers import ChatListSerializer
 
 from core.models import User
 
@@ -341,6 +341,7 @@ class NewChatConsumer(WebsocketConsumer):
             "room_name": data["room_name"],
         }
         self.send_message(content)
+        
 
     def chat_list(self, data):
         contact = get_user_contact(self.room_name)
@@ -471,4 +472,7 @@ class NewChatConsumer(WebsocketConsumer):
 
     def chat_message(self, event):
         message = event["message"]
+        msg = message.copy()
+        msg["command"] = "incoming-message"
         self.send(text_data=json.dumps(message))
+        self.send(text_data=json.dumps(msg))
