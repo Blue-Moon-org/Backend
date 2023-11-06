@@ -16,7 +16,28 @@ def get_user_contact(id):
     return user
 
 
-def get_last_10_messages(chatId):
+def get_last_messages(chatId, more=False, last_message_id=None):
+    chat = get_object_or_404(Chat, id=chatId)
+    # Set the number of messages to retrieve based on whether more is True or False
+    if more:
+        num_messages = 50  # Retrieve 50 messages when more is True
+    else:
+        num_messages = 75  # Retrieve the last 75 messages by default
+
+    # Query the messages
+    messages = chat.messages.order_by("-timestamp").all()
+
+    if last_message_id:
+        # Filter messages older than the last_message_id
+        messages = messages.filter(id__lt=last_message_id)
+
+    # Retrieve the specified number of messages
+    messages = messages[:num_messages]
+
+    return messages
+
+
+def get_last_10_messages(chatId, more=False):
     chat = get_object_or_404(Chat, id=chatId)
     return chat.messages.order_by("-timestamp").all()[:75]
 
@@ -301,6 +322,18 @@ class NewChatConsumer(WebsocketConsumer):
         self.send_chat_message(caller_username, content)
 
     def fetch_messages(self, data):
+
+        more = data.get("more", False)
+        last_id = data.get("last_id", None)
+        messages = get_last_messages(data["chatId"], more=more, last_message_id=last_id)
+        content = {
+            "command": "messages",
+            "messages": self.messages_to_json(messages),
+            "room_name": data["room_name"],
+        }
+        self.send_message(content)
+
+    def more_messages(self, data):
         messages = get_last_10_messages(data["chatId"])
         content = {
             "command": "messages",
@@ -317,7 +350,7 @@ class NewChatConsumer(WebsocketConsumer):
             context={"user": contact},
             many=True,
         )
-       
+
         log.info(chats.data[0].keys())
         # sorted_messages = sorted(
         #     chats.data, key=lambda x: x['last_message']['timestamp'], reverse=True
@@ -383,6 +416,7 @@ class NewChatConsumer(WebsocketConsumer):
 
     commands = {
         "fetch_messages": fetch_messages,
+        # "more_messages": more_messages,
         "chat_list": chat_list,
         "last_message": last_message,
         "new_message": new_message,
