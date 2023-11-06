@@ -332,7 +332,7 @@ class NewChatConsumer(WebsocketConsumer):
         messages = get_last_message(data["chatId"])
         content = {
             "command": "last_message",
-            "messages": self.messages_to_json(messages, data["room_name"]),
+            "messages": self.messages_to_json(messages, room_name=data["room_name"]),
             "room_name": data["room_name"],
         }
         self.send_message(content)
@@ -347,7 +347,7 @@ class NewChatConsumer(WebsocketConsumer):
         current_chat.save()
         content = {
             "command": "new_message",
-            "message": self.message_to_json(message),
+            "message": self.message_to_json(message, data["room_name"]),
             "room_name": data["room_name"],
         }
         return self.send_chat_message(content)
