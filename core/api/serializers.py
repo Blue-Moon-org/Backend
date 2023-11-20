@@ -48,6 +48,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 class UserLessInfoSerializer(serializers.ModelSerializer):
     chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -58,6 +59,11 @@ class UserLessInfoSerializer(serializers.ModelSerializer):
             "image",
             "brand_name",
             "chat_created",
+            "followers_count",
+            "followers",
+            "following_count",
+            "following",
+            "is_following",
             "bio",
         ]
 
@@ -67,6 +73,15 @@ class UserLessInfoSerializer(serializers.ModelSerializer):
             return obj.chats.filter(participants__id=request.user.id).exists()
         else:
             return False
+    
+    def get_is_following(self, user):
+        if "request" in self.context:
+            request = self.context["request"]
+            if request.user.id in user.following.all():
+                return True
+            else:
+                return False
+        return False
 
 
 class UserCountSerializer(serializers.ModelSerializer):

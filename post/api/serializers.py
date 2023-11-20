@@ -28,6 +28,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 class PostDetailSerializer(serializers.ModelSerializer):
     # owner = serializers.ReadOnlyField()
+    
     likes = serializers.SerializerMethodField(method_name="get_likes")
     shares = serializers.SerializerMethodField(method_name="get_shares")
     favs = serializers.SerializerMethodField(method_name="get_favs")

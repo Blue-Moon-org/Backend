@@ -6,8 +6,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 import logging
-from helper.utils import get_timezone_datetime, designer_required
-from django.utils.decorators import method_decorator
+from helper.utils import get_timezone_datetime
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import User
 from rest_framework.generics import RetrieveAPIView, ListAPIView
@@ -18,7 +17,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
-from notification.models import Notification
 from .serializers import (
     LineItemIndexSerializer,
     MyLineItemIndexSerializer,
