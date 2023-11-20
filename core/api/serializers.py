@@ -363,10 +363,38 @@ class ListUserSerializer(serializers.ModelSerializer):
             "following_count",
             "following",
             "is_following",
-            "is_verified",
             "is_active",
             "active",
             "created",
+        )
+
+    def get_is_following(self, user):
+        if "request" in self.context:
+            request = self.context["request"]
+            if request.user.id in user.following.all():
+                return True
+            else:
+                return False
+        return False
+
+
+class SearchListUserSerializer(serializers.ModelSerializer):
+    is_following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "bio",
+            "fullname",
+            "brand_name",
+            "image",
+            "brand_image",
+            "followers_count",
+            "followers",
+            "following_count",
+            "following",
+            "is_following",
         )
 
     def get_is_following(self, user):

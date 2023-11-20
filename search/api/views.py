@@ -2,7 +2,7 @@ from core.models import User
 from helper.utils import CustomPagination
 from post.models import Post
 from post.api.serializers import PostDetailSerializer
-from core.api.serializers import ListUserSerializer
+from core.api.serializers import SearchListUserSerializer
 from rest_framework.generics import (
     ListAPIView,
 )
@@ -20,21 +20,18 @@ class SearchLatest(ListAPIView):
     serializer_class = PostDetailSerializer
     permission_classes = (AllowAny,)
     pagination_class = CustomPagination    
-    #ordering = ['username']
     search_fields = ("title", "owner__lastname", "owner__firstname", "body", "category")
-
 
 # PEOPLE
 class SearchUsers(ListAPIView):
     """
     Returns all users.
     """
-    queryset = User.objects.all()
-    serializer_class = ListUserSerializer
+    queryset = User.objects.filter(account_type="Designer")
+    serializer_class = SearchListUserSerializer
     permission_classes = (AllowAny,)
     pagination_class = CustomPagination       
     search_fields = ("brand_name", "bio", "firstname", "lastname", "account_type")
-
 
 # FeaturedPost
 class FeaturedPost(ListAPIView):
@@ -46,8 +43,6 @@ class FeaturedPost(ListAPIView):
     permission_classes = (AllowAny,)
     pagination_class = CustomPagination     
     search_fields = ("fullname", "body", "category",)
-
-
 
 # POSTS
 class SearchPosts(ListAPIView):
@@ -71,13 +66,5 @@ class SearchProducts(ListAPIView):
     pagination_class = CustomPagination    
     search_fields = ("title", "description", "owner__firstname", "owner__lastname", "category")
 
-
-# class ListAllPosts(ListAPIView):
-#     queryset = Post.objects.all()
-#     serializer_class = PostDetailSerializer
-#     permission_classes = (AllowAny,)
-#     pagination_class = PageNumberPagination    
-#     filter_backends = (SearchFilter,)
-#     search_fields = ("title", "body", "owner__name", "owner__username")
 
 
