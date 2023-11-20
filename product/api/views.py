@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 import logging
+from core.api.serializers import UserLessInfoSerializer
 from helper.utils import get_timezone_datetime
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import User
@@ -254,15 +255,17 @@ class RatingView(APIView):
     def get(self, request, id):
         reviews = Review.objects.filter(product__owner_id=id)
         num_reviews = len(reviews)
+        serializer = UserLessInfoSerializer(request.user)
 
         if num_reviews == 0:
             avg_rating = 0  # Return 0 if there are no reviews
         else:
             total_rating = sum([review.rating for review in reviews])
             avg_rating = total_rating / num_reviews
-
+        data = serializer.data
+        
         return Response(
-            {"status": True, "rating":avg_rating},
+            {"status": True, "rating":avg_rating, "data":data},
             status=status.HTTP_201_CREATED,
         )
 
