@@ -48,7 +48,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 class UserLessInfoSerializer(serializers.ModelSerializer):
     chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
-    is_following = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField(method_name="get_is_following")
 
     class Meta:
         model = User
@@ -60,9 +60,7 @@ class UserLessInfoSerializer(serializers.ModelSerializer):
             "brand_name",
             "chat_created",
             "followers_count",
-            "followers",
             "following_count",
-            "following",
             "is_following",
             "bio",
         ]
@@ -395,11 +393,13 @@ class ListUserSerializer(serializers.ModelSerializer):
 
 class SearchListUserSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField(method_name="get_user")
 
     class Meta:
         model = User
         fields = (
             "id",
+            "user",
             "bio",
             "fullname",
             "brand_name",
@@ -420,3 +420,10 @@ class SearchListUserSerializer(serializers.ModelSerializer):
             else:
                 return False
         return False
+    
+    def get_user(self, obj):
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(
+           request.user
+        ).data
+        return data

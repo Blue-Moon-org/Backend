@@ -233,7 +233,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         )
 
     def get_user(self, obj):
-        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(request.user).data
         return data
 
     def get_owner(self, obj):

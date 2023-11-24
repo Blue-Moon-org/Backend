@@ -28,7 +28,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 class PostDetailSerializer(serializers.ModelSerializer):
     # owner = serializers.ReadOnlyField()
-    
+
     likes = serializers.SerializerMethodField(method_name="get_likes")
     shares = serializers.SerializerMethodField(method_name="get_shares")
     favs = serializers.SerializerMethodField(method_name="get_favs")
@@ -123,11 +123,8 @@ class PostDetailSerializer(serializers.ModelSerializer):
             return False
 
 
-
 class SearchPostDetailSerializer(serializers.ModelSerializer):
-    # owner = serializers.ReadOnlyField()
     user = serializers.SerializerMethodField(method_name="get_user")
-    
     likes = serializers.SerializerMethodField(method_name="get_likes")
     shares = serializers.SerializerMethodField(method_name="get_shares")
     favs = serializers.SerializerMethodField(method_name="get_favs")
@@ -174,7 +171,11 @@ class SearchPostDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_user(self, obj):
-        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
+        request = self.context.get("request")
+        print(request.user)
+        data = UserLessInfoSerializer(
+           request.user
+        ).data
         return data
 
     def get_likes(self, obj):
@@ -225,6 +226,7 @@ class SearchPostDetailSerializer(serializers.ModelSerializer):
             return obj.shares.filter(id=request.user.id).exists()
         else:
             return False
+
 
 class UserPostDetailSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.fullname")

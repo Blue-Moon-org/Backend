@@ -6,7 +6,7 @@ from core.api.serializers import SearchListUserSerializer
 from rest_framework.generics import (
     ListAPIView,
 )
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from product.api.serializers import ProductDetailSerializer
 from product.models import Product
 
@@ -29,7 +29,7 @@ class SearchUsers(ListAPIView):
     """
     queryset = User.objects.filter(account_type="Designer")
     serializer_class = SearchListUserSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = CustomPagination       
     search_fields = ("brand_name", "bio", "firstname", "lastname", "account_type")
 
@@ -51,7 +51,7 @@ class SearchPosts(ListAPIView):
     """
     queryset = Post.objects.all()
     serializer_class = SearchPostDetailSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = CustomPagination     
     search_fields = ("title", "body", "owner__firstname", "owner__lastname", "category")
 
@@ -62,7 +62,7 @@ class SearchProducts(ListAPIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductDetailSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = CustomPagination    
     search_fields = ("title", "description", "owner__firstname", "owner__lastname", "category")
 
