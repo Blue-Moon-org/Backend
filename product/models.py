@@ -355,39 +355,6 @@ class Order(models.Model):
         for owner, line_item in owner_line_items.items():
             line_item.save()
 
-        # for item in cart.products.all():
-        #     try:
-        #         line_item = LineItem(
-        #             order=self,
-        #             user=buyer,
-        #             quantity=item.quantity,
-        #             price=item.product.price,
-        #             order_number=order_number,
-        #         )
-        #         line_item.save()
-        #     except Exception as e:
-        #         line_item = LineItem(
-        #             order=self,
-        #             user=buyer,
-        #             product=item.product,
-        #             quantity=item.quantity,
-        #             price=item.product.price,
-        #             order_number=order_number,
-        #         )
-        #         line_item.save()
-        #     try:
-        #         product = line_item.product
-        #         product.current_stock -= line_item.quantity
-        #         product.save()
-        #     except Exception as e:
-        #         pass
-        #         log.error(
-        #             str(
-        #                 "An error occured while decrementing non variant product stock "
-        #             )
-        #             + str(e)
-        #         )
-
     def set_transaction(
         self,
         payment_method,

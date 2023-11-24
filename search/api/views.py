@@ -1,7 +1,7 @@
 from core.models import User
 from helper.utils import CustomPagination
 from post.models import Post
-from post.api.serializers import PostDetailSerializer
+from post.api.serializers import PostDetailSerializer, SearchPostDetailSerializer
 from core.api.serializers import SearchListUserSerializer
 from rest_framework.generics import (
     ListAPIView,
@@ -50,7 +50,7 @@ class SearchPosts(ListAPIView):
     Returns all posts.
     """
     queryset = Post.objects.all()
-    serializer_class = PostDetailSerializer
+    serializer_class = SearchPostDetailSerializer
     permission_classes = (AllowAny,)
     pagination_class = CustomPagination     
     search_fields = ("title", "body", "owner__firstname", "owner__lastname", "category")
