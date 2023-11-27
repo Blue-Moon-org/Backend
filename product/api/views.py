@@ -1,3 +1,4 @@
+from random import randint, sample
 from django.http import Http404
 import stripe
 import uuid
@@ -7,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 import logging
 from core.api.serializers import UserLessInfoSerializer
-from helper.utils import get_timezone_datetime
+from helper.utils import calculate_cosine_similarity, get_timezone_datetime
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import User
 from rest_framework.generics import RetrieveAPIView, ListAPIView
@@ -1204,3 +1205,50 @@ class CatalogueView(ListAPIView):
         }
         return self.get_paginated_response(response_data)
 
+
+
+
+class ProductRecommendationView(APIView):
+    def get(self, request, post, format=None):
+        try:
+            post = Product.objects.get(pk=post)
+        except Product.DoesNotExist:
+            return Response(
+                {"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        recommendations = self.get_recommendations(post)
+        recommendation_titles = [post.title for post in recommendations]
+        serializer = ProductDetailSerializer(recommendations, many=True)
+
+        return Response(
+            {"status": True, "recommendations": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
+    def get_recommendations(self, post, num_recommendations=6):
+        total_posts = Product.objects.count()
+        n = 100
+        num_posts_to_select = min(n, total_posts - 1)
+
+        random_indices = sample(range(num_posts_to_select), num_posts_to_select)
+        print(random_indices)
+        similar_posts = (
+            Product.objects.exclude(id=post.id)
+            .filter(Q(category=post.category))
+            .filter(pk__in=random_indices)
+        )
+
+        similar_posts_with_similarity = [
+            (other_post, calculate_cosine_similarity(post, other_post))
+            for other_post in similar_posts
+        ]
+
+        similar_posts_with_similarity.sort(key=lambda x: x[1], reverse=True)
+
+        recommendations = [
+            similar_post[0]
+            for similar_post in sample(similar_posts_with_similarity, num_recommendations)
+        ]
+
+        return recommendations
