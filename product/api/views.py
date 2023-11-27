@@ -1219,16 +1219,17 @@ class ProductRecommendationView(APIView):
 
         recommendations = self.get_recommendations(post)
         recommendation_titles = [post.title for post in recommendations]
-        serializer = ProductDetailSerializer(recommendations, many=True)
+        serializer = ProductDetailSerializer(recommendations, many=True, context={"request":request})
 
         return Response(
             {"status": True, "recommendations": serializer.data},
             status=status.HTTP_200_OK,
         )
 
-    def get_recommendations(self, post, num_recommendations=6):
+    def get_recommendations(self, post, num_recommendations=12):
         total_posts = Product.objects.count()
         n = 100
+        print(total_posts)
         num_posts_to_select = min(n, total_posts - 1)
 
         random_indices = sample(range(num_posts_to_select), num_posts_to_select)
