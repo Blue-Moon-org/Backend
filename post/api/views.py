@@ -530,6 +530,8 @@ class PostRecommendationView(APIView):
 
     def get_recommendations(self, post, num_recommendations=12):
         total_posts = Post.objects.count()
+        if total_posts < num_recommendations:
+            return []
         n = 100
         num_posts_to_select = min(n, total_posts - 1)
 

@@ -1228,12 +1228,14 @@ class ProductRecommendationView(APIView):
 
     def get_recommendations(self, post, num_recommendations=12):
         total_posts = Product.objects.count()
+        if total_posts < num_recommendations:
+            return []
         n = 100
-        print(total_posts)
+        
         num_posts_to_select = min(n, total_posts - 1)
 
         random_indices = sample(range(num_posts_to_select), num_posts_to_select)
-        print(random_indices)
+        
         similar_posts = (
             Product.objects.exclude(id=post.id)
             .filter(Q(category=post.category))
