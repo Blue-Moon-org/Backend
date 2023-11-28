@@ -532,6 +532,7 @@ class PostRecommendationView(APIView):
         total_posts = Post.objects.count()
         if total_posts < num_recommendations:
             return []
+        
         n = 100
         num_posts_to_select = min(n, total_posts - 1)
 
@@ -549,7 +550,9 @@ class PostRecommendationView(APIView):
         ]
 
         similar_posts_with_similarity.sort(key=lambda x: x[1], reverse=True)
-        log.debug(len(similar_posts_with_similarity))
+        #log.debug(len(similar_posts_with_similarity))
+        if len(similar_posts_with_similarity) < num_recommendations:
+            return []
         recommendations = [
             similar_post[0]
             for similar_post in sample(similar_posts_with_similarity, num_recommendations)

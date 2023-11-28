@@ -248,7 +248,7 @@ class ReviewView(APIView):
             {"status": False, "error": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
 
 class RatingView(APIView):
     permission_classes = [IsAuthenticated]
@@ -264,9 +264,9 @@ class RatingView(APIView):
             total_rating = sum([review.rating for review in reviews])
             avg_rating = total_rating / num_reviews
         data = serializer.data
-        
+
         return Response(
-            {"status": True, "rating":avg_rating, "data":data},
+            {"status": True, "rating": avg_rating, "data": data},
             status=status.HTTP_201_CREATED,
         )
 
@@ -653,9 +653,7 @@ class OrdersView(ListAPIView):
                 order__user=user, order_status=status.capitalize()
             )
         else:
-            queryset = LineItem.objects.select_related("order").filter(
-                order__user=user
-            )
+            queryset = LineItem.objects.select_related("order").filter(order__user=user)
 
         return queryset
 
@@ -713,9 +711,7 @@ class MyOrdersView(ListAPIView):
                 seller=user, order_status=status.capitalize()
             )
         else:
-            queryset = LineItem.objects.select_related("order").filter(
-                seller=user
-            )
+            queryset = LineItem.objects.select_related("order").filter(seller=user)
 
         return queryset
 
@@ -891,11 +887,7 @@ class OrderStatusView(APIView):
         #     user=request.user,
         #     ordered=True,
         # )
-        order_item = (
-            LineItem.objects
-            .filter(tracking_number=tracking_number)
-            .first()
-        )
+        order_item = LineItem.objects.filter(tracking_number=tracking_number).first()
         if order_item != None:
             context = {
                 "page_title": "Order Item #" + str(order_item.id) + " Status",
@@ -1000,7 +992,6 @@ class Checkout(APIView):
                 )
 
         elif payment_method == "pay_on_delivery":  # Handle Pay on Delivery
-            
             order_products = order.products.all()
             time_arrived = get_timezone_datetime()
             time_range = [time_sent, time_arrived]
@@ -1206,8 +1197,6 @@ class CatalogueView(ListAPIView):
         return self.get_paginated_response(response_data)
 
 
-
-
 class ProductRecommendationView(APIView):
     def get(self, request, post, format=None):
         try:
@@ -1219,7 +1208,9 @@ class ProductRecommendationView(APIView):
 
         recommendations = self.get_recommendations(post)
         recommendation_titles = [post.title for post in recommendations]
-        serializer = ProductDetailSerializer(recommendations, many=True, context={"request":request})
+        serializer = ProductDetailSerializer(
+            recommendations, many=True, context={"request": request}
+        )
 
         return Response(
             {"status": True, "recommendations": serializer.data},
@@ -1231,11 +1222,9 @@ class ProductRecommendationView(APIView):
         if total_posts < num_recommendations:
             return []
         n = 100
-        
         num_posts_to_select = min(n, total_posts - 1)
-
         random_indices = sample(range(num_posts_to_select), num_posts_to_select)
-        
+
         similar_posts = (
             Product.objects.exclude(id=post.id)
             .filter(Q(category=post.category))
@@ -1248,10 +1237,13 @@ class ProductRecommendationView(APIView):
         ]
 
         similar_posts_with_similarity.sort(key=lambda x: x[1], reverse=True)
-
+        if len(similar_posts_with_similarity) < num_recommendations:
+            return []
         recommendations = [
             similar_post[0]
-            for similar_post in sample(similar_posts_with_similarity, num_recommendations)
+            for similar_post in sample(
+                similar_posts_with_similarity, num_recommendations
+            )
         ]
 
         return recommendations
