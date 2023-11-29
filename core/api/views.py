@@ -483,12 +483,12 @@ class FollowUnfollowUser(APIView):
             fu_user.followers.remove(user)
             fu_user.save()
 
-            notify, _ = Notification.objects.get_or_create(
-                notification_type="UF",
-                comments=f"@{user.firstname} unfollowed you",
-                to_user=fu_user,
-                from_user=user,
-            )
+            # notify, _ = Notification.objects.get_or_create(
+            #     notification_type="UF",
+            #     comments=f"@{user.firstname} unfollowed you",
+            #     to_user=fu_user,
+            #     from_user=user,
+            # )
         else:
             following = True
             user.following.add(fu_user)
