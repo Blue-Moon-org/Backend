@@ -172,7 +172,7 @@ class LikePost(APIView):
                 Post.objects.get(id=post.id), context={"request": request}
             ).data
             notify = Notification.objects.create(
-                notification_type="UF",
+                notification_type="P",
                 comments=f"@{user.firstname} liked your post",
                 to_user=post.owner,
                 from_user=user,

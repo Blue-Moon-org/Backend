@@ -11,6 +11,7 @@ class Notification(models.Model):
         ("CR", "chat_request"),  # request for chat*
         ("C", "comment"),  # Comments From your comment*
         ("P", "post"),  # Comments From your post*
+        ("PD", "productt"),  # Comments From your post*
         ("RP", "repost"),  # reposts on your post*
         ("VP", "vote_post"),  # votes on your post*
         ("VC", "vote_comment"),  # votes on your comment*

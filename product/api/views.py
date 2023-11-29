@@ -19,6 +19,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
+from notification.models import Notification
+
 from .serializers import (
     LineItemIndexSerializer,
     MyLineItemIndexSerializer,
@@ -239,6 +241,14 @@ class ReviewView(APIView):
         serializer = ReviewSerializer(data=data)
         if serializer.is_valid():
             serializer.save(user=user)
+            owner = serializer.instance.product.owner
+            notify = Notification.objects.create(
+                notification_type="PD",
+                comments=f"@{user.firstname} reviewd your product",
+                to_user=owner,
+                from_user=user,
+            )
+            notify.save()
 
             return Response(
                 {"status": True, "data": serializer.data},
