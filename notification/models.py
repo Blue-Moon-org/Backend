@@ -19,8 +19,8 @@ class Notification(models.Model):
         ("NO", "new_order"),  # when someone order your product
     )
 
-    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="create")
-    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="to")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="create")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="to")
     notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     comments = models.TextField(null=True, blank=True)
     created = models.DateTimeField(default=timezone.now)
@@ -36,4 +36,4 @@ class Notification(models.Model):
         ordering = ["-created"]
 
     def __str__(self):
-        return "From: {} - To: {}".format(self.from_user, self.to_user)
+        return "From: {} - To: {}".format(self.user, self.owner)

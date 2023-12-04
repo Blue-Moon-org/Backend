@@ -14,11 +14,11 @@ from helper.utils import CustomPagination
 @permission_classes((IsAuthenticated,))
 def NotificationView(request):
     notify_list = Notification.objects.filter(
-        to_user=request.user,
+        owner=request.user,
     ).order_by("-id")
     paginator = CustomPagination()
     result_page = paginator.paginate_queryset(notify_list, request)
-    noti_count = Notification.objects.filter(to_user=request.user).count()
+    noti_count = Notification.objects.filter(owner=request.user).count()
     """
     instead of doing ,if 0 then not show notificaton badge in client side 
     we just send null value to notification count from server if count is 0

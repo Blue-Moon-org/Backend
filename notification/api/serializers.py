@@ -8,8 +8,8 @@ from product.models import LineItem, Review
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-    from_user = UserLessInfoSerializer()
-    to_user = UserLessInfoSerializer()
+    user = UserLessInfoSerializer()
+    owner = UserLessInfoSerializer()
     noti_count = serializers.SerializerMethodField(read_only=True)
     detail = serializers.SerializerMethodField(read_only=True)
 
@@ -18,8 +18,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = [
             "id",
-            "from_user",
-            "to_user",
+            "user",
+            "owner",
             "noti_count",
             "notification_type",
             "comments",

@@ -1,4 +1,4 @@
-from random import randint, sample
+from random import sample
 from notification.models import Notification
 from django.db.models import Q
 
@@ -174,8 +174,8 @@ class LikePost(APIView):
             notify = Notification.objects.create(
                 notification_type="P",
                 comments=f"@{user.firstname} liked your post",
-                to_user=post.owner,
-                from_user=user,
+                owner=post.owner,
+                user=user,
                 object_id=post.id
             )
             notify.save()
@@ -261,8 +261,8 @@ class CommentView(APIView):
             notify = Notification.objects.create(
                 notification_type="C",
                 comments=f"@{user.firstname} commented on your post",
-                to_user=post.owner,
-                from_user=user,
+                owner=post.owner,
+                user=user,
                 object_id=serializer.instance.id
             )
             notify.save()
@@ -542,7 +542,7 @@ class PostRecommendationView(APIView):
         # print(random_indices)
         similar_posts = (
             Post.objects.exclude(id=post.id)
-            .filter(Q(category=post.category))
+            # .filter(Q(category=post.category))
             .filter(pk__in=random_indices)
         )
 

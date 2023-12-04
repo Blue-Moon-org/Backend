@@ -486,8 +486,8 @@ class FollowUnfollowUser(APIView):
             # notify, _ = Notification.objects.get_or_create(
             #     notification_type="UF",
             #     comments=f"@{user.firstname} unfollowed you",
-            #     to_user=fu_user,
-            #     from_user=user,
+            #     owner=fu_user,
+            #     user=user,
             # )
         else:
             following = True
@@ -499,8 +499,8 @@ class FollowUnfollowUser(APIView):
             notify, _ = Notification.objects.get_or_create(
                 notification_type="F",
                 comments=f"@{user.firstname} followed you",
-                to_user=fu_user,
-                from_user=user,
+                owner=fu_user,
+                user=user,
             )
             notify.save()
         

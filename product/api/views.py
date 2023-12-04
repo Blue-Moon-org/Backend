@@ -245,8 +245,8 @@ class ReviewView(APIView):
             notify = Notification.objects.create(
                 notification_type="R",
                 comments=f"@{user.firstname} reviewd your product",
-                to_user=owner,
-                from_user=user,
+                owner=owner,
+                user=user,
                 object_id=serializer.instance.id
             )
             notify.save()
@@ -984,8 +984,8 @@ class Checkout(APIView):
                 #     notify = Notification.objects.create(
                 #     notification_type="NO",
                 #     comments=f"@{user.firstname} liked your post",
-                #     to_user=post.owner,
-                #     from_user=user,
+                #     owner=post.owner,
+                #     user=user,
                 # )
                 #     notify.save()
 
@@ -1015,10 +1015,10 @@ class Checkout(APIView):
             order.set_line_items_from_cart(order, order_number, user)
             order.set_transaction(payment_method, user, time_range)
             order.ordered = True
+            order.save()
             for item in order_products:
                 to_user = User.objects.filter(email=item.product.owner.email).first()
                 order.notify_owner(from_user=user, to_user=to_user, order=order)
-            order.save()
 
             return Response(
                 {"status": True, "message": "Order placed with Pay on Delivery"},
@@ -1238,7 +1238,7 @@ class ProductRecommendationView(APIView):
 
         similar_posts = (
             Product.objects.exclude(id=post.id)
-            .filter(Q(category=post.category))
+            # .filter(Q(category=post.category))
             .filter(pk__in=random_indices)
         )
 

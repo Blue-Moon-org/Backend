@@ -354,6 +354,7 @@ class Order(models.Model):
         # Save the line items to the order
         for owner, line_item in owner_line_items.items():
             line_item.save()
+        return 
 
     def set_transaction(
         self,
@@ -406,12 +407,14 @@ class Order(models.Model):
         return total
 
     def notify_owner(self, from_user, to_user, order):
+    
+        li = LineItem.objects.get(order=order)
         notify = Notification.objects.create(
             notification_type="NO",
             comments=f"You have a new order from @{from_user.firstname}",
-            to_user=to_user,
-            from_user=from_user,
-            object_id=order.my_order.id
+            owner=to_user,
+            user=from_user,
+            object_id=li.id
         )
         notify.save()
         return
