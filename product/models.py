@@ -408,7 +408,7 @@ class Order(models.Model):
 
     def notify_owner(self, from_user, to_user, order):
     
-        li = LineItem.objects.get(order=order)
+        li = LineItem.objects.filter(order=order).order_by('-id').first()
         notify = Notification.objects.create(
             notification_type="NO",
             comments=f"You have a new order from @{from_user.firstname}",
