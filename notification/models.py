@@ -12,9 +12,7 @@ class Notification(models.Model):
         ("C", "comment"),  # Comments From your comment*
         ("P", "post"),  # Comments From your post*
         ("PD", "productt"),  # Comments From your post*
-        ("RP", "repost"),  # reposts on your post*
-        ("VP", "vote_post"),  # votes on your post*
-        ("VC", "vote_comment"),  # votes on your comment*
+        ("R", "review"),  
         ("F", "follow"),  # when someone follows you*
         ("UF", "unfollow"),  # when someone unfollows you*
         ("CT", "chat"),  # when someone chats you
@@ -27,6 +25,8 @@ class Notification(models.Model):
     comments = models.TextField(null=True, blank=True)
     created = models.DateTimeField(default=timezone.now)
     user_has_seen = models.BooleanField(default=False)
+    object_id = models.CharField(max_length=15, null=True, blank=True)
+
 
     @property
     def created_time_ago(self):

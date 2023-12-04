@@ -1,4 +1,4 @@
-from random import randint, sample
+from random import sample
 from django.http import Http404
 import stripe
 import uuid
@@ -243,10 +243,11 @@ class ReviewView(APIView):
             serializer.save(user=user)
             owner = serializer.instance.product.owner
             notify = Notification.objects.create(
-                notification_type="PD",
+                notification_type="R",
                 comments=f"@{user.firstname} reviewd your product",
                 to_user=owner,
                 from_user=user,
+                object_id=serializer.instance.id
             )
             notify.save()
 
@@ -1016,7 +1017,7 @@ class Checkout(APIView):
             order.ordered = True
             for item in order_products:
                 to_user = User.objects.filter(email=item.product.owner.email).first()
-                order.notify_owner(from_user=user, to_user=to_user)
+                order.notify_owner(from_user=user, to_user=to_user, order=order)
             order.save()
 
             return Response(

@@ -176,6 +176,7 @@ class LikePost(APIView):
                 comments=f"@{user.firstname} liked your post",
                 to_user=post.owner,
                 from_user=user,
+                object_id=post.id
             )
             notify.save()
             return Response(
@@ -262,6 +263,7 @@ class CommentView(APIView):
                 comments=f"@{user.firstname} commented on your post",
                 to_user=post.owner,
                 from_user=user,
+                object_id=serializer.instance.id
             )
             notify.save()
             return Response(

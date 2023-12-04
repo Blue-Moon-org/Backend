@@ -405,12 +405,13 @@ class Order(models.Model):
             total -= self.coupon.amount
         return total
 
-    def notify_owner(self, from_user, to_user):
+    def notify_owner(self, from_user, to_user, order):
         notify = Notification.objects.create(
             notification_type="NO",
             comments=f"You have a new order from @{from_user.firstname}",
             to_user=to_user,
             from_user=from_user,
+            object_id=order.my_order.id
         )
         notify.save()
         return
@@ -529,7 +530,7 @@ class Transaction(models.Model):
 
 
 class LineItem(models.Model):
-    order = models.ForeignKey(Order, default=None, null=True, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, default=None, related_name="my_order", null=True, on_delete=models.CASCADE)
     products = models.ManyToManyField(OrderProduct)
     product_variations = models.ManyToManyField(ProductVariation)
     ordertracking = models.ForeignKey(
