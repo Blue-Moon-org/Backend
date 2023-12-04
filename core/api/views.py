@@ -502,13 +502,14 @@ class FollowUnfollowUser(APIView):
                 to_user=fu_user,
                 from_user=user,
             )
-        notify.save()
+            notify.save()
+        
 
         return Response(
             {
                 "following": following,
             },
-            status=status.HTTP_201_CREATED,
+            status=status.HTTP_200_OK,
         )
 
 
