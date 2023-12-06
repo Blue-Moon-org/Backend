@@ -169,16 +169,19 @@ class LikePost(APIView):
             post.likes.add(user)
             post.save()
             data = PostDetailSerializer(
-                Post.objects.get(id=post.id), context={"request": request}
-            ).data
-            notify = Notification.objects.create(
-                notification_type="P",
-                comments=f"@{user.firstname} liked your post",
-                owner=post.owner,
-                user=user,
-                object_id=post.id
-            )
-            notify.save()
+                    Post.objects.get(id=post.id), context={"request": request}
+                ).data
+            #You don't need notification when you like your own post
+            if user != post.onwer:
+                
+                notify = Notification.objects.create(
+                    notification_type="P",
+                    comments=f"@{user.firstname} liked your post",
+                    owner=post.owner,
+                    user=user,
+                    object_id=post.id
+                )
+                notify.save()
             return Response(
                 {"status": True, "data": data, "message": "Post liked"},
                 status=status.HTTP_200_OK,
@@ -258,14 +261,16 @@ class CommentView(APIView):
         serializer = CommentSerializer(data=data)
         if serializer.is_valid():
             serializer.save(owner=user)
-            notify = Notification.objects.create(
-                notification_type="C",
-                comments=f"@{user.firstname} commented on your post",
-                owner=post.owner,
-                user=user,
-                object_id=serializer.instance.id
-            )
-            notify.save()
+            #Do not send notification if you commented on your post
+            if user != post.owner:
+                notify = Notification.objects.create(
+                    notification_type="C",
+                    comments=f"@{user.firstname} commented on your post",
+                    owner=post.owner,
+                    user=user,
+                    object_id=serializer.instance.id
+                )
+                notify.save()
             return Response(
                 {
                     "status": True,

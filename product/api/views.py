@@ -267,7 +267,8 @@ class RatingView(APIView):
     def get(self, request, id):
         reviews = Review.objects.filter(product__owner_id=id)
         num_reviews = len(reviews)
-        serializer = UserLessInfoSerializer(request.user)
+        user = User.objects.get(id=id)
+        serializer = UserLessInfoSerializer(user)
 
         if num_reviews == 0:
             avg_rating = 0  # Return 0 if there are no reviews
