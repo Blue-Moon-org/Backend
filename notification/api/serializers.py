@@ -52,14 +52,14 @@ class NotificationSerializer(serializers.ModelSerializer):
                 data = PostDetailSerializer(Post.objects.get(id=obj_id), context={"request": request}).data
 
             elif obj.notification_type == "C":
-                data = CommentDetailSerializer(Comment.objects.get(id=obj_id)).data
+                data = CommentDetailSerializer(Comment.objects.get(id=obj_id), context={"request": request}).data
 
             elif obj.notification_type == "R":
-                data = ReviewSerializer(Review.objects.get(id=obj_id)).data
+                data = ReviewSerializer(Review.objects.get(id=obj_id), context={"request": request}).data
             elif obj.notification_type == "F":
                 data = obj_id
             elif obj.notification_type == "NO":
-                data = LineItemIndexSerializer(LineItem.objects.get(id=obj_id)).data
+                data = LineItemIndexSerializer(LineItem.objects.get(id=obj_id), context={"request": request}).data
 
         else:
             data = {}
