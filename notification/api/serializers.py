@@ -8,10 +8,12 @@ from product.models import LineItem, Review
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-    user = UserLessInfoSerializer()
-    owner = UserLessInfoSerializer()
+    # user = UserLessInfoSerializer()
+    # owner = UserLessInfoSerializer()
     noti_count = serializers.SerializerMethodField(read_only=True)
     detail = serializers.SerializerMethodField(read_only=True)
+    owner = serializers.SerializerMethodField(method_name="get_owner")
+    user = serializers.SerializerMethodField(method_name="get_user")
 
 
     class Meta:
@@ -31,6 +33,16 @@ class NotificationSerializer(serializers.ModelSerializer):
     def get_noti_count(self, obj):
         count = self.context.get("noti_count")
         return count
+    
+    def get_owner(self, obj):
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(obj.owner, context={"request": request}).data
+        return data
+    
+    def get_user(self, obj):
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(obj.user, context={"request": request}).data
+        return data
     
     def get_detail(self, obj):
         request = self.context.get("request")
