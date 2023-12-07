@@ -169,17 +169,16 @@ class LikePost(APIView):
             post.likes.add(user)
             post.save()
             data = PostDetailSerializer(
-                    Post.objects.get(id=post.id), context={"request": request}
-                ).data
-            #You don't need notification when you like your own post
+                Post.objects.get(id=post.id), context={"request": request}
+            ).data
+            # You don't need notification when you like your own post
             if user != post.onwer:
-                
                 notify = Notification.objects.create(
                     notification_type="P",
                     comments=f"@{user.firstname} liked your post",
                     owner=post.owner,
                     user=user,
-                    object_id=post.id
+                    object_id=post.id,
                 )
                 notify.save()
             return Response(
@@ -223,7 +222,6 @@ class FavoritePost(APIView):
             data = PostDetailSerializer(
                 Post.objects.get(id=post.id), context={"request": request}
             ).data
-
             return Response(
                 {
                     "status": True,
@@ -243,6 +241,8 @@ class FavoritePost(APIView):
                 {"status": True, "data": data, "message": "Post removed as favorite"},
                 status=status.HTTP_200_OK,
             )
+        
+    
 
 
 class CategoryDetail(RetrieveUpdateDestroyAPIView):
@@ -261,14 +261,14 @@ class CommentView(APIView):
         serializer = CommentSerializer(data=data)
         if serializer.is_valid():
             serializer.save(owner=user)
-            #Do not send notification if you commented on your post
+            # Do not send notification if you commented on your post
             if user != post.owner:
                 notify = Notification.objects.create(
                     notification_type="C",
                     comments=f"@{user.firstname} commented on your post",
                     owner=post.owner,
                     user=user,
-                    object_id=serializer.instance.id
+                    object_id=serializer.instance.id,
                 )
                 notify.save()
             return Response(
@@ -515,8 +515,30 @@ class LikedPostsView(ListAPIView):
         return self.get_paginated_response(response_data)
 
 
+class FavouritePostsView(ListAPIView):
+    serializer_class = PostDetailSerializer
+    pagination_class = CustomPagination  # Use the custom pagination class
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = Post.objects.filter(favourite__id=request.user.id)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            "status": True,
+            "message": "Favourite posts fetched successfully",
+            "posts": serializer.data,
+        }
+
+        return self.get_paginated_response(response_data)
+
 class PostRecommendationView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, post, format=None):
         try:
             post = Post.objects.get(pk=post)
@@ -527,19 +549,20 @@ class PostRecommendationView(APIView):
 
         recommendations = self.get_recommendations(post)
         recommendation_titles = [post.title for post in recommendations]
-        serializer = PostDetailSerializer(recommendations, many=True, context={"request":request})
+        serializer = PostDetailSerializer(
+            recommendations, many=True, context={"request": request}
+        )
 
         return Response(
             {"status": True, "recommendations": serializer.data},
             status=status.HTTP_200_OK,
         )
-    
 
     def get_recommendations(self, post, num_recommendations=12):
         total_posts = Post.objects.count()
         if total_posts < num_recommendations:
             return []
-        
+
         n = 100
         num_posts_to_select = min(n, total_posts - 1)
 
@@ -557,12 +580,14 @@ class PostRecommendationView(APIView):
         ]
 
         similar_posts_with_similarity.sort(key=lambda x: x[1], reverse=True)
-        #log.debug(len(similar_posts_with_similarity))
+        # log.debug(len(similar_posts_with_similarity))
         if len(similar_posts_with_similarity) < num_recommendations:
             return []
         recommendations = [
             similar_post[0]
-            for similar_post in sample(similar_posts_with_similarity, num_recommendations)
+            for similar_post in sample(
+                similar_posts_with_similarity, num_recommendations
+            )
         ]
 
         return recommendations

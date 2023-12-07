@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     CommentList,
     CommentView,
+    FavouritePostsView,
     FeaturedPosts,
     FeedView,
     LikeComment,
@@ -30,6 +31,7 @@ urlpatterns = [
     path('like-comment/<int:pk>/', LikeComment.as_view(), name='like-comment'),
     path('share/<int:pk>/', SharePost.as_view(), name='share-post'),
     path('favorite/<int:pk>/', FavoritePost.as_view(), name='favorite-post'),
+    path('myfavorites/', FavouritePostsView.as_view(), name='favorites'),
     path('see-more/<int:post>/', PostRecommendationView.as_view(), name='see-more-post'),
    # path('categories/', CategoryList.as_view(), name='category-list'),
    # path('categories/<int:pk>/', CategoryDetail.as_view(), name='category-detail'),
