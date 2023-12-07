@@ -173,9 +173,7 @@ class SearchPostDetailSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         request = self.context.get("request")
         print(request.user)
-        data = UserLessInfoSerializer(
-           request.user
-        ).data
+        data = UserLessInfoSerializer(request.user).data
         return data
 
     def get_likes(self, obj):
@@ -305,7 +303,10 @@ class CommentDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_owner(self, obj):
-        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(
+            User.objects.filter(id=obj.owner.id).first(), context={"request": request}
+        ).data
         return data
 
     def get_likes(self, obj):
@@ -313,9 +314,7 @@ class CommentDetailSerializer(serializers.ModelSerializer):
 
     def get_user_has_liked(self, obj):
         request = self.context.get("request")
-        # print(obj.likes.all(), request.user.is_authenticated)
         if request and request.user.is_authenticated:
-            print("User exists")
             return obj.likes.filter(email=request.user.email).exists()
         else:
             return False
