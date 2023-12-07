@@ -234,11 +234,14 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         request = self.context.get("request")
-        data = UserLessInfoSerializer(request.user).data
+        data = UserLessInfoSerializer(request.user, context={"request": request}).data
         return data
 
     def get_owner(self, obj):
-        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(
+            User.objects.filter(id=obj.owner.id).first(), context={"request": request}
+        ).data
         return data
 
     def get_images(self, obj):
@@ -345,7 +348,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
 
     def get_owner(self, obj):
-        data = UserLessInfoSerializer(User.objects.filter(id=obj.user.id).first()).data
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(
+            User.objects.filter(id=obj.user.id).first(), context={"request": request}
+        ).data
         return data
 
 

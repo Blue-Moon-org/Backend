@@ -238,7 +238,7 @@ class ReviewView(APIView):
     def post(self, request, format=None):
         user = request.user
         data = request.data
-        serializer = ReviewSerializer(data=data)
+        serializer = ReviewSerializer(data=data, context={"request": request})
         if serializer.is_valid():
             serializer.save(user=user)
             owner = serializer.instance.product.owner
