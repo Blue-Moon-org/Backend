@@ -73,13 +73,11 @@ class UserLessInfoSerializer(serializers.ModelSerializer):
             return False
     
     def get_is_following(self, user):
-        if "request" in self.context:
-            request = self.context["request"]
-            if request.user.id in user.following.all():
-                return True
-            else:
-                return False
-        return False
+        request = self.context["request"]
+        if request.user in user.followers.all():
+            return True
+        else:
+            return False
 
 
 class UserCountSerializer(serializers.ModelSerializer):

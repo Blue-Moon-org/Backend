@@ -330,19 +330,23 @@ class RefundSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source="user.fullname")
+    owner = serializers.SerializerMethodField(method_name="get_owner")
 
     class Meta:
         model = Review
         fields = [
             "id",
             "product",
-            "user",
+            "owner",
             "rating",
             "review",
             "created_at",
             "updated_at",
         ]
+
+    def get_owner(self, obj):
+        data = UserLessInfoSerializer(User.objects.filter(id=obj.user.id).first()).data
+        return data
 
 
 class LineItemProductSerializer(serializers.ModelSerializer):
