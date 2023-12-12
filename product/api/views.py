@@ -637,6 +637,42 @@ class AddToCartView(APIView):
                 {"status": True, "message": "Product added to cart"},
                 status=HTTP_200_OK,
             )
+        
+
+    def put(self, request, slug, *args, **kwargs):
+        user = User.objects.filter(email=request.user).first()
+
+        # # Get variations and quantity from the request data
+        # variations = request.data.get("variations", [])
+        qty = request.data.get("quantity", 1)
+
+        if slug is None:
+            return Response(
+                {"status": False, "message": "Invalid request"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        product = get_object_or_404(Product, slug=slug)
+
+        order_product_qs = OrderProduct.objects.filter(
+            product=product, user=user, ordered=False
+        )
+
+        if order_product_qs.exists():
+            order_product = order_product_qs.first()
+            order_product.quantity += qty
+            order_product.save()
+            return Response(
+                {"status": True, "message": "Product quantity updated"},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"status": False, "message": "Product not found in cart"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        
+    
 
 
 class OrderDetailView(RetrieveAPIView):
@@ -762,6 +798,21 @@ class OrderDetailView(APIView):
                 status=status.HTTP_200_OK,
             )
 
+    def put(self, request, *args, **kwargs):
+        user = User.objects.filter(email=request.user).first()
+        order = Order.objects.filter(user=user, ordered=False)
+        if order.exists():
+            serializer = OrderSerializer(order.first())
+            return Response(
+                {"status": True, "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+
+        else:
+            return Response(
+                {"status": False, "message": "You do not have an active order"},
+                status=status.HTTP_200_OK,
+            )
 
 class PaymentView(APIView):
     permission_classes = [IsAuthenticated]
