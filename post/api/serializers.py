@@ -289,8 +289,8 @@ class SearchPostDetailSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         request = self.context.get("request")
-        print(request.user)
-        data = UserLessInfoSerializer(request.user).data
+        # print(request.user)
+        data = UserLessInfoSerializer(request.user, context={"request": request}).data
         return data
 
     def get_likes(self, obj):

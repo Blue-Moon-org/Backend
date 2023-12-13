@@ -430,6 +430,7 @@ class SearchListUserSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         request = self.context.get("request")
         data = UserLessInfoSerializer(
-           request.user
+           request.user,
+           context={"request": request}
         ).data
         return data
