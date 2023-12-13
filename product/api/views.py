@@ -247,7 +247,7 @@ class ReviewView(APIView):
                 comments=f"@{user.firstname} reviewd your product",
                 owner=owner,
                 user=user,
-                object_id=serializer.instance.id
+                object_id=serializer.instance.id,
             )
             notify.save()
 
@@ -637,7 +637,6 @@ class AddToCartView(APIView):
                 {"status": True, "message": "Product added to cart"},
                 status=HTTP_200_OK,
             )
-        
 
     def put(self, request, slug, *args, **kwargs):
         user = User.objects.filter(email=request.user).first()
@@ -651,13 +650,10 @@ class AddToCartView(APIView):
                 {"status": False, "message": "Invalid request"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         product = get_object_or_404(Product, slug=slug)
-
         order_product_qs = OrderProduct.objects.filter(
             product=product, user=user, ordered=False
         )
-
         if order_product_qs.exists():
             order_product = order_product_qs.first()
             order_product.quantity += qty
@@ -671,8 +667,6 @@ class AddToCartView(APIView):
                 {"status": False, "message": "Product not found in cart"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        
-    
 
 
 class OrderDetailView(RetrieveAPIView):
@@ -813,6 +807,7 @@ class OrderDetailView(APIView):
                 {"status": False, "message": "You do not have an active order"},
                 status=status.HTTP_200_OK,
             )
+
 
 class PaymentView(APIView):
     permission_classes = [IsAuthenticated]

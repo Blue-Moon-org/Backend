@@ -49,6 +49,8 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class UserLessInfoSerializer(serializers.ModelSerializer):
     chat_created = serializers.SerializerMethodField(method_name="get_chat_created")
     is_following = serializers.SerializerMethodField(method_name="get_is_following")
+    image = serializers.SerializerMethodField(method_name="get_image")
+    brand_image = serializers.SerializerMethodField(method_name="get_brand_image")
 
     class Meta:
         model = User
@@ -78,6 +80,12 @@ class UserLessInfoSerializer(serializers.ModelSerializer):
             return True
         else:
             return False
+        
+    def get_image(self, obj):
+        return obj.image_url
+        
+    def get_brand_image(self, obj):
+        return obj.brand_image_url
 
 
 class UserCountSerializer(serializers.ModelSerializer):
