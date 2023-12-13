@@ -278,7 +278,7 @@ class RatingView(APIView):
         data = serializer.data
 
         return Response(
-            {"status": True, "rating": avg_rating, "data": data},
+            {"status": True, "rating": round(avg_rating, 1), "data": data},
             status=status.HTTP_201_CREATED,
         )
 
@@ -971,10 +971,6 @@ class Checkout(APIView):
         payment_method = request.data.get(
             "payment_method"
         )  # New parameter for payment method
-        # billing_address_id = request.data.get("BillingAddress")
-        # shipping_address_id = request.data.get("ShippingAddress")
-        # billing_address = Address.objects.get(id=billing_address_id)
-        # shipping_address = Address.objects.get(id=shipping_address_id)
         time_sent = get_timezone_datetime()
 
         # Check the selected payment method
@@ -1053,10 +1049,6 @@ class Checkout(APIView):
             order_products = order.products.all()
             time_arrived = get_timezone_datetime()
             time_range = [time_sent, time_arrived]
-
-            # # order.payment = payment
-            # order.billing_address = billing_address
-            # order.shipping_address = shipping_address
             order.ref_code = str(uuid.uuid4().hex)[:10].upper()
             order_number = order.generate_number()
             order.set_line_items_from_cart(order, order_number, user)
