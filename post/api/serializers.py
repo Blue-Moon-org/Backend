@@ -36,6 +36,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField(method_name="get_url")
     images = serializers.SerializerMethodField(method_name="get_images")
     owner = serializers.SerializerMethodField(method_name="get_owner")
+    user = serializers.SerializerMethodField(method_name="get_user")
     user_has_liked = serializers.SerializerMethodField(method_name="get_user_has_liked")
     user_has_favorited = serializers.SerializerMethodField(
         method_name="get_user_has_favorited"
@@ -50,6 +51,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "body",
+            "user",
             "owner",
             "created",
             "category",
@@ -96,6 +98,13 @@ class PostDetailSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         data = UserLessInfoSerializer(
             User.objects.filter(id=obj.owner.id).first(), context={"request": request}
+        ).data
+        return data
+    
+    def get_user(self, obj):
+        request = self.context.get("request")
+        data = UserLessInfoSerializer(
+            User.objects.filter(id=request.user.id).first(), context={"request": request}
         ).data
         return data
 
