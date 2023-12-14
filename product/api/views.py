@@ -283,6 +283,19 @@ class RatingView(APIView):
         )
 
 
+
+class BalanceView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        orders = LineItem.objects.filter(seller=request.user, order_status="Delivered")
+        balance = sum([order.price for order in orders])
+
+        return Response(
+            {"status": True, "balance": round(balance, 2)},
+            status=status.HTTP_200_OK,
+        )
+
 # @method_decorator(designer_required, name='dispatch')
 class UserProdctsView(ListAPIView):
     serializer_class = ProductDetailSerializer

@@ -29,6 +29,7 @@ from .views import (
     MyProducts,
     RatingView,
     ProductRecommendationView,
+    BalanceView,
 )
 
 app_name = "product"
@@ -76,5 +77,6 @@ urlpatterns = [
     path("review/create/", ReviewView.as_view(), name="create-review"),
     path("reviews/<int:pk>/", ReviewList.as_view(), name="review-list"),
     path("rating/<str:id>/", RatingView.as_view(), name="rating"),
+    path("balance/", BalanceView.as_view(), name="balance"),
     path('see-more/<int:post>/', ProductRecommendationView.as_view(), name='see-more-product'),
 ]
