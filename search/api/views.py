@@ -66,7 +66,7 @@ class SearchPosts(ListAPIView):
     serializer_class = SearchPostDetailSerializer
     permission_classes = (IsAuthenticated,)
     pagination_class = CustomPagination     
-    search_fields = ("title", "body", "owner__firstname", "owner__lastname", "category")
+    search_fields = ("title", "body", "owner__firstname", "owner__lastname", "owner__brand_name","category")
 
 # PRODUCTS
 class SearchProducts(ListAPIView):
@@ -77,7 +77,7 @@ class SearchProducts(ListAPIView):
     serializer_class = ProductDetailSerializer
     permission_classes = (IsAuthenticated,)
     pagination_class = CustomPagination    
-    search_fields = ("title", "description", "owner__firstname", "owner__lastname", "category")
+    search_fields = ("title", "description", "owner__firstname", "owner__lastname", "owner__brand_name","category")
 
 
 
