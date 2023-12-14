@@ -218,7 +218,7 @@ class ReviewList(ListAPIView):
     pagination_class = CustomPagination  # Use the custom pagination class
 
     def list(self, request, pk, *args, **kwargs):
-        queryset = Review.objects.filter(id=pk)
+        queryset = Review.objects.filter(product=pk)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

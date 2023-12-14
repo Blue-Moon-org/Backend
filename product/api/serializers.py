@@ -383,6 +383,8 @@ class OrderUserSerializer(serializers.ModelSerializer):
 
 
 class OrderSellerrSerializer(serializers.ModelSerializer):
+    brand_image = serializers.SerializerMethodField(method_name="get_brand_image")
+    image = serializers.SerializerMethodField(method_name="get_image")
     class Meta:
         model = User
         fields = [
@@ -393,6 +395,13 @@ class OrderSellerrSerializer(serializers.ModelSerializer):
             "brand_name",
         ]
 
+    def get_image(self, obj):
+        
+        return obj.image_url
+
+    def get_brand_image(self, obj):
+        
+        return obj.brand_image_url
 
 class LineItemIndexSerializer(serializers.ModelSerializer):
     user = OrderUserSerializer(many=False)
