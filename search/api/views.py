@@ -10,6 +10,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from product.api.serializers import ProductDetailSerializer
 from product.models import Product
 
+import django_filters
+
+
+class ContactFilter(django_filters.FilterSet):
+    class Meta:
+        model = User
+        fields = {
+            'firstname': ['startswith'],
+            'lastname': ['startswith'],
+        }
+        together = ['first_name', 'last_name']
+
 
 # LATEST
 class SearchLatest(ListAPIView):
@@ -32,6 +44,7 @@ class SearchUsers(ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = CustomPagination       
     search_fields = ("brand_name", "bio", "firstname", "lastname", "account_type")
+    filter_class = ContactFilter
 
 # FeaturedPost
 class FeaturedPost(ListAPIView):
