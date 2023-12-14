@@ -549,7 +549,7 @@ class PostRecommendationView(APIView):
 
         recommendations = self.get_recommendations(post)
         recommendation_titles = [post.title for post in recommendations]
-        serializer = PostDetailSerializer(
+        serializer = SeeMorePostDetailSerializer(
             recommendations, many=True, context={"request": request}
         )
 

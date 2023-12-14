@@ -400,6 +400,8 @@ class ListUserSerializer(serializers.ModelSerializer):
 class SearchListUserSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField(method_name="get_user")
+    brand_image = serializers.SerializerMethodField(method_name="get_brand_image")
+    image = serializers.SerializerMethodField(method_name="get_image")
 
     class Meta:
         model = User
@@ -417,6 +419,14 @@ class SearchListUserSerializer(serializers.ModelSerializer):
             "following",
             "is_following",
         )
+    
+    def get_image(self, obj):
+        
+        return obj.image_url
+
+    def get_brand_image(self, obj):
+        
+        return obj.brand_image_url
 
     def get_is_following(self, user):
         if "request" in self.context:
