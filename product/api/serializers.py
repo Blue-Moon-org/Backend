@@ -407,6 +407,8 @@ class LineItemIndexSerializer(serializers.ModelSerializer):
     user = OrderUserSerializer(many=False)
     seller = OrderSellerrSerializer(many=False)
     products = OrderProductSerializer(many=True)
+    # price = serializers.SerializerMethodField(method_name="get_price")
+    # quantity = serializers.SerializerMethodField(method_name="get_quantity")
 
     class Meta:
         model = LineItem
@@ -421,6 +423,13 @@ class LineItemIndexSerializer(serializers.ModelSerializer):
             "tracking_number",
             "quantity",
         ]
+    # def get_price(self, obj):
+        
+    #     return obj.products.all()[0].get_final_price()
+    
+    # def get_quantity(self, obj):
+        
+    #     return obj.products.all()[0].quantity
 
 
 class LineItemStatusSerializer(serializers.ModelSerializer):

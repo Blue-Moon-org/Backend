@@ -539,6 +539,37 @@ class AddToNotify(APIView):
         )
 
 
+class BlockUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        id = request.data.get("id")
+        fu_user = get_object_or_404(User, id=id)
+        user = request.user
+
+        if fu_user in user.users_blocked.all():
+            user_added = False
+            user.users_blocked.remove(fu_user)
+            user.save()
+            return Response(
+                {
+                    "user_blocked": user_added,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        else:
+            user_added = True
+            user.users_blocked.add(fu_user)
+            user.save()
+
+            return Response(
+                {
+                    "user_blocked": user_added,
+                },
+                status=status.HTTP_200_OK,
+            )
+
 class UserProfile(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 

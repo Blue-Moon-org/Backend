@@ -431,8 +431,9 @@ class NewChatConsumer(WebsocketConsumer):
 
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["id"]
-        rooms = Chat.objects.filter(participants=self.room_name)
-        # print(rooms)
+        users = get_object_or_404(User, id=self.room_name).users_blocked.all()
+        rooms = Chat.objects.filter(participants=self.room_name).exclude(participants__in=users)
+        print(rooms)
         if rooms.exists():
             for room in rooms:
                 room_group_name = f"chat_{room.room_name}"

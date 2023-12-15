@@ -91,6 +91,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     users_notify = models.ManyToManyField(
         "self", related_name="notify", blank=True, symmetrical=False
     )
+    users_blocked = models.ManyToManyField(
+        "self", related_name="block", blank=True, symmetrical=False
+    )
     friends = models.ManyToManyField("self", blank=True)
     email_verified = models.BooleanField(default=False)
     phone_verified = models.BooleanField(default=False)

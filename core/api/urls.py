@@ -22,7 +22,8 @@ from .views import (
     UserDetailView,
     UserDeleteView,
     FeedbackCreateView,
-    VerifyPhone
+    VerifyPhone,
+    BlockUserView
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -60,6 +61,7 @@ urlpatterns = [
     path("followers/<id>/", UserFollowers.as_view(), name="user_followers"),
     path("following/<id>/", UserFollowing.as_view(), name="user_following"),
     path("add_to_notify/<id>/", AddToNotify.as_view(), name="user_following"),
+    path("block_user/", BlockUserView.as_view(), name="user_blocked"),
     #path("user/followed/user/", user_followed_user, name="user_followed_user"),
     path("password/<email>/", ChangePassword.as_view(), name="change-password"),
     path("feedback/", FeedbackCreateView.as_view(), name="feedback"),
