@@ -1,5 +1,6 @@
 import datetime
 from chat.views import get_user_contact
+from product.models import LineItem
 from .models import Chat, Message
 from rest_framework import serializers
 from core.models import User
@@ -74,10 +75,11 @@ class ChatSerializer(serializers.ModelSerializer):
     participants = serializers.SerializerMethodField(method_name="get_participants")
     last_message = serializers.SerializerMethodField("get_last_message")
     is_blocked = serializers.SerializerMethodField("get_is_blocked")
+    can_block = serializers.SerializerMethodField("get_can_block")
 
     class Meta:
         model = Chat
-        fields = ("id", "room_name", "last_message", "participants", "is_blocked")
+        fields = ("id", "room_name", "is_blocked", "can_block","last_message", "participants", )
         read_only = "id"
 
     def get_participants(self, obj):
@@ -107,7 +109,12 @@ class ChatSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         other = obj.participants.exclude(id=request.user.id).first()
         return other.users_blocked.filter(id=request.user.id).exists()
-
+    
+    def get_can_block(self, obj):
+        request = self.context.get("request")
+        other = obj.participants.exclude(id=request.user.id).first()
+        exist = LineItem.objects.filter(user__in=[request.user, other], seller__in=[request.user, other]).exists()
+        return not exist
 
 class ChatListSerializer(serializers.ModelSerializer):
     participants = serializers.SerializerMethodField(method_name="get_participants")
