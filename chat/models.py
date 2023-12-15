@@ -18,6 +18,7 @@ class Message(models.Model):
     # msg = models.JSONField(default=str, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     msg_type = models.CharField(max_length=12, choices=MSG_TYPE_CHOICES, default="text")
+    
 
     def __str__(self):
         return self.contact.fullname
@@ -27,6 +28,7 @@ class Chat(models.Model):
     participants = models.ManyToManyField(User, related_name="chats", blank=True)
     messages = models.ManyToManyField(Message, blank=True)
     room_name = models.CharField(max_length=50, unique=True)
+    clear_id = models.CharField(max_length=22, default="")
 
     def generate_name(self):
         # Try to generate a unique room name

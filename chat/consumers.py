@@ -7,6 +7,7 @@ from chat.models import Chat, Message
 from chat.serializers import ChatListSerializer
 
 from core.models import User
+from product.models import LineItem
 
 log = logging.getLogger(__name__)
 
@@ -23,10 +24,12 @@ def get_last_messages(chatId, more=False, last_message_id=None):
         num_messages = 50  # Retrieve 50 messages when more is True
     else:
         num_messages = 75  # Retrieve the last 75 messages by default
-
+    id = chat.clear_id
+    if id:
     # Query the messages
-    messages = chat.messages.order_by("-timestamp").all()
-
+        messages = chat.messages.filter(id__gt=id).order_by("-timestamp").all()#[:125]
+    else:
+        messages = chat.messages.order_by("-timestamp").all()#[:125]
     if last_message_id:
         # Filter messages older than the last_message_id
         messages = messages.filter(id__lt=last_message_id)
@@ -39,12 +42,22 @@ def get_last_messages(chatId, more=False, last_message_id=None):
 
 def get_last_10_messages(chatId, more=False):
     chat = get_object_or_404(Chat, id=chatId)
-    return chat.messages.order_by("-timestamp").all()[:75]
+    id = chat.clear_id
+    if id:
+        data = chat.messages.filter(id__gt=id).order_by("-timestamp").all()[:125]
+    else:
+        data = chat.messages.order_by("-timestamp").all()[:125]
+    return data
 
 
 def get_last_message(chatId):
     chat = get_object_or_404(Chat, id=chatId)
-    return chat.messages.order_by("-timestamp").all()[:1]
+    id = chat.clear_id
+    if id:
+        data = chat.messages.filter(id__gt=id).order_by("-timestamp").all()[:1]
+    else:
+        data = chat.messages.order_by("-timestamp").all()[:1]
+    return data
 
 
 def get_current_chat(chatId):
@@ -345,14 +358,13 @@ class NewChatConsumer(WebsocketConsumer):
 
     def chat_list(self, data):
         contact = get_user_contact(self.room_name)
-
         chats = ChatListSerializer(
             contact.chats.all(),
             context={"user": contact},
             many=True,
         )
 
-        log.info(chats.data[0].keys())
+        #log.info(chats.data[0].keys())
         # sorted_messages = sorted(
         #     chats.data, key=lambda x: x['last_message']['timestamp'], reverse=True
         # )
@@ -415,8 +427,62 @@ class NewChatConsumer(WebsocketConsumer):
             }
         return data
 
+    def block_user(self, data):
+
+        # print("blocking user")
+        user = get_user_contact(self.room_name)
+        # print(user.id)
+        fu_user = get_current_chat(data["chatId"]).participants.exclude(id=user.id).first()
+        exist = LineItem.objects.filter(user__in=[user, fu_user], seller__in=[user, fu_user]).exists()
+        if exist:
+            # print("order esxits")
+            user_added = False
+            
+            content = {
+                "command": "block_user",
+                "user_blocked": user_added,
+                "message": "You can't block this user because you have an active order",
+                "room_name": data["room_name"],
+            }
+            return self.send_chat_message(content) 
+        if fu_user in user.users_blocked.all():
+            user_added = False
+            user.users_blocked.remove(fu_user)
+            user.save()
+            content = {
+                "command": "block_user",
+                "user_blocked": user_added,
+                "message": "User has been unblocked",
+                "room_name": data["room_name"],
+            }
+            return self.send_chat_message(content)
+        else:
+            user_added = True
+            user.users_blocked.add(fu_user)
+            user.save()
+            content = {
+                "command": "block_user",
+                "user_blocked": user_added,
+                "message": "User has been blocked",
+                "room_name": data["room_name"],
+            }
+            return self.send_chat_message(content)
+
+    def clear_messages(self, data):
+        chat = get_current_chat(data["chatId"])
+        chat.clear_id = chat.messages.order_by("-timestamp").all()[0].id
+        chat.save()
+        content = {
+                "command": "clear_messages",
+                "message": "Messages has been cleared",
+                "room_name": data["room_name"],
+            }
+        return self.send_chat_message(content)
+
     commands = {
         "fetch_messages": fetch_messages,
+        "block_user": block_user,
+        "clear_messages": clear_messages,
         # "more_messages": more_messages,
         "chat_list": chat_list,
         "last_message": last_message,
@@ -431,8 +497,9 @@ class NewChatConsumer(WebsocketConsumer):
 
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["id"]
-        users = get_object_or_404(User, id=self.room_name).users_blocked.all()
-        rooms = Chat.objects.filter(participants=self.room_name).exclude(participants__in=users)
+        blocked_users = get_object_or_404(User, id=self.room_name).users_blocked.all()
+        print(f"users blocked: {blocked_users}")
+        rooms = Chat.objects.filter(participants=self.room_name).exclude(participants__in=blocked_users)
         print(rooms)
         if rooms.exists():
             for room in rooms:
@@ -459,7 +526,6 @@ class NewChatConsumer(WebsocketConsumer):
         if msg_type == "measure" or msg_type == "image":
             data["message"] = json.dumps(data["message"])
             self.commands[data["command"]](self, data)
-
         else:
             self.commands[data["command"]](self, data)
 

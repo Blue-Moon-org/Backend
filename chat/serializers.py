@@ -79,7 +79,14 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ("id", "room_name", "is_blocked", "can_block","last_message", "participants", )
+        fields = (
+            "id",
+            "room_name",
+            "is_blocked",
+            "can_block",
+            "last_message",
+            "participants",
+        )
         read_only = "id"
 
     def get_participants(self, obj):
@@ -104,25 +111,37 @@ class ChatSerializer(serializers.ModelSerializer):
         if len(list(obj.messages.all())) < 1:
             return {}
         return ChatMessageSerializer(list(obj.messages.all())[-1]).data
-    
+
     def get_is_blocked(self, obj):
         request = self.context.get("request")
         other = obj.participants.exclude(id=request.user.id).first()
         return other.users_blocked.filter(id=request.user.id).exists()
-    
+
     def get_can_block(self, obj):
         request = self.context.get("request")
         other = obj.participants.exclude(id=request.user.id).first()
-        exist = LineItem.objects.filter(user__in=[request.user, other], seller__in=[request.user, other]).exists()
+        exist = LineItem.objects.filter(
+            user__in=[request.user, other], seller__in=[request.user, other]
+        ).exists()
         return not exist
+
 
 class ChatListSerializer(serializers.ModelSerializer):
     participants = serializers.SerializerMethodField(method_name="get_participants")
     last_message = serializers.SerializerMethodField("get_last_message")
+    is_blocked = serializers.SerializerMethodField("get_is_blocked")
+    active_order = serializers.SerializerMethodField("get_active_order")
 
     class Meta:
         model = Chat
-        fields = ("id", "room_name", "last_message", "participants")
+        fields = (
+            "id",
+            "room_name",
+            "active_order",
+            "is_blocked",
+            "last_message",
+            "participants",
+        )
         read_only = "id"
 
     def get_participants(self, obj):
@@ -146,6 +165,19 @@ class ChatListSerializer(serializers.ModelSerializer):
         if len(list(obj.messages.all())) < 1:
             return {}
         return ChatMessageSerializer(list(obj.messages.all())[-1]).data
+
+    def get_is_blocked(self, obj):
+        user = self.context.get("user")
+        other = obj.participants.exclude(id=user.id).first()
+        return other.users_blocked.filter(id=user.id).exists()
+
+    def get_active_order(self, obj):
+        user = self.context.get("user")
+        other = obj.participants.exclude(id=user.id).first()
+        exist = LineItem.objects.filter(
+            user__in=[user, other], seller__in=[user, other]
+        ).exists()
+        return not exist
 
 
 # class UserMessageSerializer(serializers.ModelSerializer):
