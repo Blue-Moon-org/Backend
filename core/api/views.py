@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.models import User
 from notification.models import Notification
+from product.models import LineItem
 from .serializers import (
     GetEmailSerializer,
     ListUserSerializer,
@@ -546,6 +547,14 @@ class BlockUserView(APIView):
         id = request.data.get("id")
         fu_user = get_object_or_404(User, id=id)
         user = request.user
+        exist = LineItem.objects.filter(user__in=[user, fu_user], seller__in=[user, fu_user]).exists()
+        if exist:
+            return Response(
+                {
+                    "message": "You can't block this user because you have an active order",
+                },
+                status=status.HTTP_200_OK,
+            )
 
         if fu_user in user.users_blocked.all():
             user_added = False
