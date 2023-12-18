@@ -135,7 +135,6 @@ class VerifyEmail(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = VerifyOTPRegisterSerializer(data=request.data)
-       
 
         if serializer.is_valid():
             email = serializer.data["email"]
@@ -216,7 +215,7 @@ class LoginAPIView(generics.GenericAPIView):
         if serializer.is_valid():
             user_data = serializer.validated_data
             user = UserProfileSerializer(
-                User.objects.get(email=user_data["email"])
+                User.objects.get(email=user_data["email"]), context={"request": request}
             ).data
             data = {"tokens": user_data["tokens"], "user_data": user}
             return Response({"status": True, "data": data}, status=status.HTTP_200_OK)
@@ -504,7 +503,6 @@ class FollowUnfollowUser(APIView):
                 user=user,
             )
             notify.save()
-        
 
         return Response(
             {
@@ -547,7 +545,9 @@ class BlockUserView(APIView):
         id = request.data.get("id")
         fu_user = get_object_or_404(User, id=id)
         user = request.user
-        exist = LineItem.objects.filter(user__in=[user, fu_user], seller__in=[user, fu_user]).exists()
+        exist = LineItem.objects.filter(
+            user__in=[user, fu_user], seller__in=[user, fu_user]
+        ).exists()
         if exist:
             return Response(
                 {
@@ -578,6 +578,7 @@ class BlockUserView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+
 
 class UserProfile(APIView):
     permission_classes = (permissions.IsAuthenticated,)
