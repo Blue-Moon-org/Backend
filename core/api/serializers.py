@@ -274,6 +274,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     following_count = serializers.ReadOnlyField()
     is_self = serializers.SerializerMethodField()
     following = serializers.SerializerMethodField()
+    brand_image = serializers.SerializerMethodField(method_name="get_brand_image")
+    image = serializers.SerializerMethodField(method_name="get_image")
 
     class Meta:
         model = User
@@ -314,6 +316,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "created",
             "created_at",
         )
+
+    def get_image(self, obj):
+        
+        return obj.image_url
+
+    def get_brand_image(self, obj):
+        
+        return obj.brand_image_url
 
     def get_is_self(self, user):
         if "request" in self.context:
