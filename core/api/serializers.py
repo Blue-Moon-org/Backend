@@ -76,7 +76,7 @@ class UserLessInfoSerializer(serializers.ModelSerializer):
     
     def get_is_following(self, user):
         request = self.context.get("request")
-        return user.following.filter(id=request.user.id).exists()
+        return user.followers.filter(id=request.user.id).exists()
     
             
     def get_image(self, obj):
