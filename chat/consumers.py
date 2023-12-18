@@ -469,6 +469,7 @@ class NewChatConsumer(WebsocketConsumer):
             return self.send_chat_message(content)
 
     def clear_messages(self, data):
+        user_contact = get_user_contact(data["from"])
         chat = get_current_chat(data["chatId"])
         chat.clear_id = chat.messages.order_by("-timestamp").all()[0].id
         chat.save()
@@ -498,9 +499,9 @@ class NewChatConsumer(WebsocketConsumer):
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["id"]
         blocked_users = get_object_or_404(User, id=self.room_name).users_blocked.all()
-        print(f"users blocked: {blocked_users}")
+        #print(f"users blocked: {blocked_users}")
         rooms = Chat.objects.filter(participants=self.room_name).exclude(participants__in=blocked_users)
-        print(rooms)
+        #print(rooms)
         if rooms.exists():
             for room in rooms:
                 room_group_name = f"chat_{room.room_name}"
@@ -521,7 +522,6 @@ class NewChatConsumer(WebsocketConsumer):
         data = json.loads(text_data)
         # Check for the 'msg_type' field in the incoming message data
         msg_type = data.get("msg_type", "text")
-
         # Call the appropriate handler based on the 'msg_type'
         if msg_type == "measure" or msg_type == "image":
             data["message"] = json.dumps(data["message"])
