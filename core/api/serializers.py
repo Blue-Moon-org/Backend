@@ -76,11 +76,9 @@ class UserLessInfoSerializer(serializers.ModelSerializer):
     
     def get_is_following(self, user):
         request = self.context.get("request")
-        if user.following.filter(id=request.user.id).exists():
-            return True
-        else:
-            return False
-        
+        return user.following.filter(id=request.user.id).exists()
+    
+            
     def get_image(self, obj):
         return obj.image_url
         
@@ -327,11 +325,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return False
 
     def get_following(self, obj):
-        if "request" in self.context:
-            request = self.context["request"]
-            if obj in request.user.following.all():
-                return True
-        return False
+        
+        request = self.context["request"]
+        return obj.following.filter(id=request.user.id).exists()
 
 
 class LoginSerializer(serializers.ModelSerializer):
@@ -389,10 +385,7 @@ class ListUserSerializer(serializers.ModelSerializer):
 
     def get_is_following(self, user):
         request = self.context["request"]
-        if user.following.filter(id=request.user.id).exists():
-            return True
-        else:
-            return False
+        return user.following.filter(id=request.user.id).exists()
 
 
 class SearchListUserSerializer(serializers.ModelSerializer):
@@ -428,10 +421,7 @@ class SearchListUserSerializer(serializers.ModelSerializer):
 
     def get_is_following(self, user):
         request = self.context["request"]
-        if user.following.filter(id=request.user.id).exists():
-            return True
-        else:
-            return False
+        return user.following.filter(id=request.user.id).exists()
         
     
     def get_user(self, obj):
