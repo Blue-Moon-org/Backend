@@ -327,7 +327,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_following(self, obj):
         
         request = self.context["request"]
-        return obj.following.filter(id=request.user.id).exists()
+        return obj.followers.filter(id=request.user.id).exists()
 
 
 class LoginSerializer(serializers.ModelSerializer):
@@ -385,7 +385,7 @@ class ListUserSerializer(serializers.ModelSerializer):
 
     def get_is_following(self, user):
         request = self.context["request"]
-        return user.following.filter(id=request.user.id).exists()
+        return user.followers.filter(id=request.user.id).exists()
 
 
 class SearchListUserSerializer(serializers.ModelSerializer):
@@ -421,7 +421,7 @@ class SearchListUserSerializer(serializers.ModelSerializer):
 
     def get_is_following(self, user):
         request = self.context["request"]
-        return user.following.filter(id=request.user.id).exists()
+        return user.followers.filter(id=request.user.id).exists()
         
     
     def get_user(self, obj):
