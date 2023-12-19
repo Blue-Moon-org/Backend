@@ -17,6 +17,7 @@ from django.utils import timezone
 from core.models import User
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from firebase_admin import messaging
 
 
 CATEGORY = (
@@ -202,3 +203,21 @@ def calculate_cosine_similarity(post1, post2):
     similarity = cosine_similarity(tfidf_post1, tfidf_post2)[0][0]
 
     return similarity
+
+
+def sendPush(title, msg, registration_token, dataObject=None):
+    # See documentation on defining a message payload.
+    message = messaging.MulticastMessage(
+        notification=messaging.Notification(
+            title=title,
+            body=msg
+        ),
+        data=dataObject,
+        tokens=registration_token,
+    )
+
+    # Send a message to the device corresponding to the provided
+    # registration token.
+    response = messaging.send_multicast(message)
+    # Response is a message ID string.
+    print('Successfully sent message:', response)

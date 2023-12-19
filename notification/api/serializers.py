@@ -60,7 +60,8 @@ class NotificationSerializer(serializers.ModelSerializer):
                 data = obj_id
             elif obj.notification_type == "NO":
                 data = LineItemIndexSerializer(LineItem.objects.get(id=obj_id), context={"request": request}).data
-
+            elif obj.notification_type == "UO":
+                data = LineItemIndexSerializer(LineItem.objects.get(id=obj_id), context={"request": request}).data
         else:
             data = {}
         

@@ -417,7 +417,7 @@ class Order(models.Model):
             object_id=li.id
         )
         notify.save()
-        return
+        return notify
 
     def generate_number(self):
         last_order = Order.objects.last()

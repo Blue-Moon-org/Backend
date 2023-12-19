@@ -2,6 +2,8 @@ from pathlib import Path
 import os
 from decouple import config
 from datetime import timedelta
+import firebase_admin
+from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     "chat",
     "search",
     "django_filters",
+    "fcm_django",
 ]
 
 MIDDLEWARE = [
@@ -234,3 +237,11 @@ EMAIL_DEBUG = True
 TWILIO_ACCOUNT_SID = "ACe049e152c930eb680c84c923d8bd0d99"
 TWILIO_AUTH_TOKEN = "78fbb1ef8231566fcbce64ec49687f5b"
 TWILIO_PHONE_NUMBER = "+1 417 620 4546"
+
+
+FCM_DJANGO_SETTINGS = {
+    "FCM_SERVER_KEY": "AAAATAtrg8M:APA91bE84OBpiIhHh_5pvnBXaHaGuVSjlvdg6y0Ka4qbsnGsCruTj1kzy_MsXs4vTO_HoLWf4_nNoj2EcHZA7Zj4hCATSzDusQEnmwNGUyCOotBKGviHOvCwBeDH3FgYZUeNB1vxszlw"
+}
+
+cred = credentials.Certificate(BASE_DIR / "credentials.json")
+firebase_admin.initialize_app(cred)

@@ -1,11 +1,12 @@
+import json
 from random import sample
+from notification.api.serializers import NotificationSerializer
 from notification.models import Notification
-from django.db.models import Q
-
+from fcm_django.models import FCMDevice
 
 from post.models import Post  # , Comment, Category, LikedPost
 from core.models import User
-from helper.utils import CustomPagination, calculate_cosine_similarity
+from helper.utils import CustomPagination, calculate_cosine_similarity, sendPush
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListAPIView
@@ -172,7 +173,8 @@ class LikePost(APIView):
                 Post.objects.get(id=post.id), context={"request": request}
             ).data
             # You don't need notification when you like your own post
-            if user != post.onwer:
+            # TODO Change this back to not equal to
+            if user != post.owner:
                 notify = Notification.objects.create(
                     notification_type="P",
                     comments=f"@{user.firstname} liked your post",
@@ -181,6 +183,18 @@ class LikePost(APIView):
                     object_id=post.id,
                 )
                 notify.save()
+                # print(notify.id)
+                data = NotificationSerializer(
+                    Notification.objects.get(id=notify.id), context={"request": request}
+                ).data
+
+                device = FCMDevice.objects.filter(user=post.owner).first()
+                # device.send_message(Message(data=dict(data)))
+                sendPush(
+                    title="Like Post",
+                    msg=json.dumps(data),
+                    registration_token=[device.registration_id],
+                )
             return Response(
                 {"status": True, "data": data, "message": "Post liked"},
                 status=status.HTTP_200_OK,
@@ -241,8 +255,6 @@ class FavoritePost(APIView):
                 {"status": True, "data": data, "message": "Post removed as favorite"},
                 status=status.HTTP_200_OK,
             )
-        
-    
 
 
 class CategoryDetail(RetrieveUpdateDestroyAPIView):
@@ -258,7 +270,7 @@ class CommentView(APIView):
         post = get_object_or_404(Post, pk=pk)
         data["post"] = post.id
         user = request.user  # Use the authenticated user
-        serializer = CommentSerializer(data=data)
+        serializer = CommentSerializer(data=data, context={"request": request})
         if serializer.is_valid():
             serializer.save(owner=user)
             # Do not send notification if you commented on your post
@@ -271,6 +283,18 @@ class CommentView(APIView):
                     object_id=serializer.instance.id,
                 )
                 notify.save()
+                # print(notify.id)
+                data = NotificationSerializer(
+                    Notification.objects.get(id=notify.id), context={"request": request}
+                ).data
+
+                device = FCMDevice.objects.filter(user=post.owner).first()
+                # device.send_message(Message(data=dict(data)))
+                sendPush(
+                    title="Like Post",
+                    msg=json.dumps(data),
+                    registration_token=[device.registration_id],
+                )
             return Response(
                 {
                     "status": True,
@@ -535,6 +559,7 @@ class FavouritePostsView(ListAPIView):
         }
 
         return self.get_paginated_response(response_data)
+
 
 class PostRecommendationView(APIView):
     permission_classes = [IsAuthenticated]

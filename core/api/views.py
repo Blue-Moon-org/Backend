@@ -1,3 +1,4 @@
+import json
 import math
 import random
 from datetime import date
@@ -7,6 +8,7 @@ from django.template.loader import get_template
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.models import User
+from notification.api.serializers import NotificationSerializer
 from notification.models import Notification
 from product.models import LineItem
 from .serializers import (
@@ -21,6 +23,7 @@ from .serializers import (
     ResetPasswordSerializer,
     VerifyOTPResetSerializer,
 )
+from fcm_django.models import FCMDevice
 from core.email import *
 from rest_framework import generics, status, permissions
 from .serializers import FeedbackSerializer
@@ -31,7 +34,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from helper.utils import Util
+from helper.utils import Util, sendPush
 from twilio.rest import Client
 from django.db.models import DecimalField, ExpressionWrapper
 from django.db.models import F
@@ -503,6 +506,14 @@ class FollowUnfollowUser(APIView):
                 user=user,
             )
             notify.save()
+            data = NotificationSerializer(
+                Notification.objects.get(id=notify.id), context={"request": request}
+            ).data
+
+            device = FCMDevice.objects.filter(user=fu_user).first()
+            sendPush(
+                title="Follow", msg=json.dumps(data), registration_token=[device.registration_id]
+            )
 
         return Response(
             {

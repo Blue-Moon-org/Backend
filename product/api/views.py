@@ -1,3 +1,4 @@
+import json
 from random import sample
 from django.http import Http404
 import stripe
@@ -8,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 import logging
 from core.api.serializers import UserLessInfoSerializer
-from helper.utils import calculate_cosine_similarity, get_timezone_datetime
+from helper.utils import calculate_cosine_similarity, get_timezone_datetime, sendPush
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import User
 from rest_framework.generics import RetrieveAPIView, ListAPIView
@@ -18,7 +19,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
-
+from notification.api.serializers import NotificationSerializer
+from fcm_django.models import FCMDevice
 from notification.models import Notification
 
 from .serializers import (
@@ -735,11 +737,32 @@ class UpdateOrderStatusView(APIView):
             )
 
         new_order_status = request.data.get("order_status")
+        
 
         if new_order_status in [choice[0] for choice in ORDER_TRACKING_CHOICES]:
             line_item.order_status = new_order_status
             line_item.save()
             serializer = LineItemIndexSerializer(line_item)
+
+            notify = Notification.objects.create(
+                notification_type="UO",
+                comments=f"Your order is now {line_item.order_status}",
+                owner=line_item.user,
+                user=line_item.seller,
+                object_id=line_item.id
+            )
+            notify.save()
+            # print(notify.id)
+            print(Notification.objects.get(id=notify.id))
+            data = NotificationSerializer(
+                Notification.objects.get(id=notify.id), context={"request": request}
+                ).data
+
+            device = FCMDevice.objects.filter(user=line_item.user).first()
+            #device.send_message(Message(data=dict(data)))
+            sendPush(
+                title="Update Order", msg=json.dumps(data), registration_token=[device.registration_id]
+            )
             return Response(
                 {"status": True, "data": serializer.data},
                 status=status.HTTP_200_OK,
@@ -1070,7 +1093,17 @@ class Checkout(APIView):
             order.save()
             for item in order_products:
                 to_user = User.objects.filter(email=item.product.owner.email).first()
-                order.notify_owner(from_user=user, to_user=to_user, order=order)
+                notify = order.notify_owner(from_user=user, to_user=to_user, order=order)
+                #print(notify.id)
+                data = NotificationSerializer(
+                Notification.objects.get(id=notify.id), context={"request": request}
+                ).data
+
+                device = FCMDevice.objects.filter(user=to_user).first()
+                #device.send_message(Message(data=dict(data)))
+                sendPush(
+                    title="Like Post", msg=json.dumps(data), registration_token=[device.registration_id]
+                )
 
             return Response(
                 {"status": True, "message": "Order placed with Pay on Delivery"},

@@ -391,7 +391,9 @@ class CommentSerializer(serializers.ModelSerializer):
         ]
 
     def get_owner(self, obj):
-        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first()).data
+        request = self.context.get("request")
+        print(request.user)
+        data = UserLessInfoSerializer(User.objects.filter(id=obj.owner.id).first(), context={"request":request}).data
         return data
 
     def get_user_has_liked(self, obj):
