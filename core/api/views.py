@@ -14,6 +14,7 @@ from product.models import LineItem
 from .serializers import (
     GetEmailSerializer,
     ListUserSerializer,
+    ReportSerializer,
     UserProfileSerializer,
     RegisterSerializer,
     LoginSerializer,
@@ -426,6 +427,19 @@ class FeedbackCreateView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ReportView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = ReportSerializer(data=request.data)
+        recipient = User.objects.get(id=request.data["recipient"])
+
+        if serializer.is_valid():
+            serializer.save(user=request.user, recipient=recipient)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserFollowers(APIView):
     queryset = User.objects.all()

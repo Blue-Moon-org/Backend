@@ -23,7 +23,8 @@ from .views import (
     UserDeleteView,
     FeedbackCreateView,
     VerifyPhone,
-    BlockUserView
+    BlockUserView,
+    ReportView
 )
 from fcm_django.api.rest_framework import FCMDeviceAuthorizedViewSet
 from rest_framework_simplejwt.views import (
@@ -66,6 +67,7 @@ urlpatterns = [
     #path("user/followed/user/", user_followed_user, name="user_followed_user"),
     path("password/<email>/", ChangePassword.as_view(), name="change-password"),
     path("feedback/", FeedbackCreateView.as_view(), name="feedback"),
+    path("report/", ReportView.as_view(), name="feedback"),
     path('get_users_within_range/', UserLocationView.as_view(), name='get_users_within_range'),
     # Only allow creation of devices by authenticated users
     path('devices/', FCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),

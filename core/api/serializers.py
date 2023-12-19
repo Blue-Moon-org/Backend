@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from core.models import User, Feedback
+from core.models import Report, User, Feedback
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -45,6 +45,14 @@ class FeedbackSerializer(serializers.ModelSerializer):
         model = Feedback
         fields = ("id", "title", "text", "user", "created_on")
 
+
+class ReportSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.fullname")
+    # recipient = serializers.ReadOnlyField(source="recipient.fullname")
+
+    class Meta:
+        model = Report
+        fields = ("id", "title", "text", "user","recipient", "created_on")
 
 class UserLessInfoSerializer(serializers.ModelSerializer):
     chat_created = serializers.SerializerMethodField(method_name="get_chat_created")

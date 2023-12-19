@@ -165,3 +165,19 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"{self.user} gave feedback {self.title}"
+
+
+
+class Report(models.Model):
+    recipient = models.ForeignKey(
+        User, related_name="reportee", on_delete=models.CASCADE, editable=False, blank=True, null=True
+    )
+    title = models.CharField(max_length=10000, blank=True, null=True)
+    text = models.TextField(max_length=10000)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, editable=False, blank=True, null=True
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} reports {self.recipient}"
