@@ -291,7 +291,7 @@ class CommentView(APIView):
                 device = FCMDevice.objects.filter(user=post.owner).first()
                 # device.send_message(Message(data=dict(data)))
                 sendPush(
-                    title="Like Post",
+                    title="Comment",
                     msg=json.dumps(data),
                     registration_token=[device.registration_id],
                 )

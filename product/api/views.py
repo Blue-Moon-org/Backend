@@ -252,6 +252,17 @@ class ReviewView(APIView):
                 object_id=serializer.instance.id,
             )
             notify.save()
+            # print(notify.id)
+            print(Notification.objects.get(id=notify.id))
+            data = NotificationSerializer(
+                Notification.objects.get(id=notify.id), context={"request": request}
+                ).data
+
+            device = FCMDevice.objects.filter(user=owner).first()
+            #device.send_message(Message(data=dict(data)))
+            sendPush(
+                title="Review Order", msg=json.dumps(data), registration_token=[device.registration_id]
+            )
 
             return Response(
                 {"status": True, "data": serializer.data},
@@ -1102,7 +1113,7 @@ class Checkout(APIView):
                 device = FCMDevice.objects.filter(user=to_user).first()
                 #device.send_message(Message(data=dict(data)))
                 sendPush(
-                    title="Like Post", msg=json.dumps(data), registration_token=[device.registration_id]
+                    title="New Order", msg=json.dumps(data), registration_token=[device.registration_id]
                 )
 
             return Response(
