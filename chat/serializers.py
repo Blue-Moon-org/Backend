@@ -14,7 +14,7 @@ class ContactListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("fullname", "profile_pic", "owner")
+        fields = ("id","fullname", "profile_pic", "owner")
         # read_only_fields = ('id','fullname','profile_pic')
 
     def get_profile_pic(self, obj):
