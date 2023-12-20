@@ -755,25 +755,25 @@ class UpdateOrderStatusView(APIView):
             line_item.save()
             serializer = LineItemIndexSerializer(line_item)
 
-            notify = Notification.objects.create(
-                notification_type="UO",
-                comments=f"Your order is now {line_item.order_status}",
-                owner=line_item.user,
-                user=line_item.seller,
-                object_id=line_item.id
-            )
-            notify.save()
-            # print(notify.id)
-            print(Notification.objects.get(id=notify.id))
-            data = NotificationSerializer(
-                Notification.objects.get(id=notify.id), context={"request": request}
-                ).data
+            # notify = Notification.objects.create(
+            #     notification_type="UO",
+            #     comments=f"Your order is now {line_item.order_status}",
+            #     owner=line_item.user,
+            #     user=line_item.seller,
+            #     object_id=line_item.id
+            # )
+            # notify.save()
+            # # print(notify.id)
+            # print(Notification.objects.get(id=notify.id))
+            # data = NotificationSerializer(
+            #     Notification.objects.get(id=notify.id), context={"request": request}
+            #     ).data
 
-            device = FCMDevice.objects.filter(user=line_item.user).first()
-            #device.send_message(Message(data=dict(data)))
-            sendPush(
-                title="Update Order", msg=json.dumps(data), registration_token=[device.registration_id]
-            )
+            # device = FCMDevice.objects.filter(user=line_item.user).first()
+            # #device.send_message(Message(data=dict(data)))
+            # sendPush(
+            #     title="Update Order", msg=json.dumps(data), registration_token=[device.registration_id]
+            # )
             return Response(
                 {"status": True, "data": serializer.data},
                 status=status.HTTP_200_OK,
