@@ -290,7 +290,9 @@ class CommentView(APIView):
                     Notification.objects.get(id=notify.id), context={"request": request}
                 ).data
 
-                device = FCMDevice.objects.filter(user=post.owner).first()
+                device = FCMDevice.objects.filter(user=post.owner)
+                if device.exists():
+                    device = device.first()
                 # device.send_message(Message(data=dict(data)))
                 sendPush(
                     title="Comment",
