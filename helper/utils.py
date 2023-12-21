@@ -18,6 +18,8 @@ from core.models import User
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from firebase_admin import messaging
+import logging
+log = logging.getLogger(__name__)
 
 
 CATEGORY = (
@@ -220,4 +222,5 @@ def sendPush(title, msg, registration_token, dataObject=None):
     # registration token.
     response = messaging.send_multicast(message)
     # # Response is a message ID string.
-    # print('Successfully sent message:', response.status_code)
+    print('Successfully sent message:', response)
+    log.info(f"Successfully sent message: {response}")

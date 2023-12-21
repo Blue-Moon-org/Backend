@@ -264,7 +264,7 @@ class ReviewView(APIView):
             notify.save()
             # print(notify.id)
             print(Notification.objects.get(id=notify.id))
-            data = NotificationSerializer(
+            push_data = NotificationSerializer(
                 Notification.objects.get(id=notify.id), context={"request": request}
             ).data
 
@@ -274,9 +274,9 @@ class ReviewView(APIView):
                 # device.send_message(Message(data=dict(data)))
                 sendPush(
                     title="Order Review",
-                    msg=data["comments"],
+                    msg=push_data["comments"],
                     registration_token=[device.registration_id],
-                    dataObject={"data": json.dumps(data)},
+                    dataObject={"data": json.dumps(push_data)},
                 )
 
             return Response(
