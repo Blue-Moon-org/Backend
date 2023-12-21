@@ -295,7 +295,7 @@ class CommentView(APIView):
                 if device.exists():
                     device = device.first()
                     sendPush(
-                        title="Comment",
+                        title="New Comment",
                         msg=data["comments"],
                         registration_token=[device.registration_id],
                         dataObject={"data":json.dumps(data)}
