@@ -199,7 +199,7 @@ class LikePost(APIView):
                     Notification.objects.get(id=notify.id), context={"request": request}
                 ).data
 
-                device = FCMDevice.objects.filter(user=post.owner)
+                device = FCMDevice.objects.filter(user=post.owner, active=True)
                 
                 if device.exists():
                     device = device.first()
@@ -303,7 +303,7 @@ class CommentView(APIView):
                     Notification.objects.get(id=notify.id), context={"request": request}
                 ).data
 
-                device = FCMDevice.objects.filter(user=post.owner)
+                device = FCMDevice.objects.filter(user=post.owner, active=True)
                 if device.exists():
                     device = device.first()
                     sendPush(
