@@ -266,7 +266,7 @@ class ReviewView(APIView):
                     title="Order Review",
                     msg=data["comments"],
                     registration_token=[device.registration_id],
-                    dataObject=data
+                    dataObject={"data":json.dumps(data)}
                 )
 
             return Response(
@@ -1124,7 +1124,7 @@ class Checkout(APIView):
                         title="New Order",
                         msg=data["comments"],
                         registration_token=[device.registration_id],
-                        dataObject=data
+                        dataObject={"data":json.dumps(data)}
                     )
 
             return Response(

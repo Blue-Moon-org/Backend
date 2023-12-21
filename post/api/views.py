@@ -1,3 +1,4 @@
+import json
 from random import sample
 from notification.api.serializers import NotificationSerializer
 from notification.models import Notification
@@ -195,7 +196,7 @@ class LikePost(APIView):
                         title="Post Liked",
                         msg=data["comments"],
                         registration_token=[device.registration_id],
-                        dataObject=data
+                        dataObject={"data":json.dumps(data)}
                     )
             return Response(
                 {"status": True, "data": data, "message": "Post liked"},
@@ -297,7 +298,7 @@ class CommentView(APIView):
                         title="Comment",
                         msg=data["comments"],
                         registration_token=[device.registration_id],
-                        dataObject=data
+                        dataObject={"data":json.dumps(data)}
                     )
             return Response(
                 {
