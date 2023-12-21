@@ -219,5 +219,5 @@ def sendPush(title, msg, registration_token, dataObject=None):
     # Send a message to the device corresponding to the provided
     # registration token.
     response = messaging.send_multicast(message)
-    # Response is a message ID string.
-    print('Successfully sent message:', response)
+    # # Response is a message ID string.
+    # print('Successfully sent message:', response.status_code)

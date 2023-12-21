@@ -256,15 +256,18 @@ class ReviewView(APIView):
             print(Notification.objects.get(id=notify.id))
             data = NotificationSerializer(
                 Notification.objects.get(id=notify.id), context={"request": request}
-                ).data
+            ).data
 
             device = FCMDevice.objects.filter(user=owner)
             if device.exists():
-                    device = device.first()
-            #device.send_message(Message(data=dict(data)))
-            sendPush(
-                title="Review Order", msg=json.dumps(data), registration_token=[device.registration_id]
-            )
+                device = device.first()
+            # device.send_message(Message(data=dict(data)))
+                sendPush(
+                    title="Order Review",
+                    msg=data["comments"],
+                    registration_token=[device.registration_id],
+                    dataObject=data
+                )
 
             return Response(
                 {"status": True, "data": serializer.data},
@@ -298,7 +301,6 @@ class RatingView(APIView):
         )
 
 
-
 class BalanceView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -310,6 +312,7 @@ class BalanceView(APIView):
             {"status": True, "balance": round(balance, 2)},
             status=status.HTTP_200_OK,
         )
+
 
 # @method_decorator(designer_required, name='dispatch')
 class UserProdctsView(ListAPIView):
@@ -750,7 +753,6 @@ class UpdateOrderStatusView(APIView):
             )
 
         new_order_status = request.data.get("order_status")
-        
 
         if new_order_status in [choice[0] for choice in ORDER_TRACKING_CHOICES]:
             line_item.order_status = new_order_status
@@ -1106,19 +1108,24 @@ class Checkout(APIView):
             order.save()
             for item in order_products:
                 to_user = User.objects.filter(email=item.product.owner.email).first()
-                notify = order.notify_owner(from_user=user, to_user=to_user, order=order)
-                #print(notify.id)
+                notify = order.notify_owner(
+                    from_user=user, to_user=to_user, order=order
+                )
+                # print(notify.id)
                 data = NotificationSerializer(
-                Notification.objects.get(id=notify.id), context={"request": request}
+                    Notification.objects.get(id=notify.id), context={"request": request}
                 ).data
 
                 device = FCMDevice.objects.filter(user=to_user)
                 if device.exists():
                     device = device.first()
-                #device.send_message(Message(data=dict(data)))
-                sendPush(
-                    title="New Order", msg=json.dumps(data), registration_token=[device.registration_id]
-                )
+                    # device.send_message(Message(data=dict(data)))
+                    sendPush(
+                        title="New Order",
+                        msg=data["comments"],
+                        registration_token=[device.registration_id],
+                        dataObject=data
+                    )
 
             return Response(
                 {"status": True, "message": "Order placed with Pay on Delivery"},

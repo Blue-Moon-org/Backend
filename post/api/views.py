@@ -1,4 +1,3 @@
-import json
 from random import sample
 from notification.api.serializers import NotificationSerializer
 from notification.models import Notification
@@ -188,14 +187,15 @@ class LikePost(APIView):
                     Notification.objects.get(id=notify.id), context={"request": request}
                 ).data
 
-                device = FCMDevice.objects.filter(user=post.owner)
+                device = FCMDevice.objects.filter(user=post.owner).first()
                 if device.exists():
                     device = device.first()
-                    # device.send_message(Message(data=dict(data)))
+                    #device.send_message(Message(data=dict(data)))
                     sendPush(
                         title="Like Post",
-                        msg=json.dumps(data),
+                        msg=data["comments"],
                         registration_token=[device.registration_id],
+                        dataObject=data
                     )
             return Response(
                 {"status": True, "data": data, "message": "Post liked"},
@@ -293,12 +293,12 @@ class CommentView(APIView):
                 device = FCMDevice.objects.filter(user=post.owner)
                 if device.exists():
                     device = device.first()
-                # device.send_message(Message(data=dict(data)))
-                sendPush(
-                    title="Comment",
-                    msg=json.dumps(data),
-                    registration_token=[device.registration_id],
-                )
+                    sendPush(
+                        title="Comment",
+                        msg=data["comments"],
+                        registration_token=[device.registration_id],
+                        dataObject=data
+                    )
             return Response(
                 {
                     "status": True,
