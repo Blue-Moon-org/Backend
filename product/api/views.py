@@ -268,9 +268,9 @@ class ReviewView(APIView):
                 Notification.objects.get(id=notify.id), context={"request": request}
             ).data
 
-            device = FCMDevice.objects.filter(user=owner).order_by("-id")
+            device = FCMDevice.objects.filter(user=owner)
             if device.exists():
-                device = device.first()
+                device = device.last()
                 # device.send_message(Message(data=dict(data)))
                 sendPush(
                     title="Order Review",
@@ -1126,9 +1126,9 @@ class Checkout(APIView):
                     Notification.objects.get(id=notify.id), context={"request": request}
                 ).data
 
-                device = FCMDevice.objects.filter(user=to_user).order_by("-id")
+                device = FCMDevice.objects.filter(user=to_user)
                 if device.exists():
-                    device = device.first()
+                    device = device.last()
                     # device.send_message(Message(data=dict(data)))
                     sendPush(
                         title="New Order",
