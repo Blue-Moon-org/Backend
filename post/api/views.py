@@ -202,7 +202,7 @@ class LikePost(APIView):
                 device = FCMDevice.objects.filter(user=post.owner)
                 
                 if device.exists():
-                    device = device.last()
+                    device = device.first()
                     #print(device)
                     sendPush(
                         title="Post Liked",
@@ -299,18 +299,18 @@ class CommentView(APIView):
                 )
                 notify.save()
                 # print(notify.id)
-                data = NotificationSerializer(
+                push_data = NotificationSerializer(
                     Notification.objects.get(id=notify.id), context={"request": request}
                 ).data
 
                 device = FCMDevice.objects.filter(user=post.owner)
                 if device.exists():
-                    device = device.last()
+                    device = device.first()
                     sendPush(
                         title="New Comment",
-                        msg=data["comments"],
+                        msg=push_data["comments"],
                         registration_token=[device.registration_id],
-                        dataObject={"data":json.dumps(data)}
+                        dataObject={"data":json.dumps(push_data)}
                     )
             return Response(
                 {

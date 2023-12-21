@@ -270,7 +270,7 @@ class ReviewView(APIView):
 
             device = FCMDevice.objects.filter(user=owner)
             if device.exists():
-                device = device.last()
+                device = device.first()
                 # device.send_message(Message(data=dict(data)))
                 sendPush(
                     title="Order Review",
@@ -1128,7 +1128,7 @@ class Checkout(APIView):
 
                 device = FCMDevice.objects.filter(user=to_user)
                 if device.exists():
-                    device = device.last()
+                    device = device.first()
                     # device.send_message(Message(data=dict(data)))
                     sendPush(
                         title="New Order",
