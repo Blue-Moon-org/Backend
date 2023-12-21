@@ -181,6 +181,16 @@ class ProductView(APIView):
             for image in images:
                 ProductImage.objects.create(product=product, image=image)
             # Save the product to the database
+            device = FCMDevice.objects.filter(user__in=product.owner.followers.all())
+            if device.exists():
+                # device = device.first()
+                # device.send_message(Message(data=dict(data)))
+                sendPush(
+                    title="New Post",
+                    msg=f"{product.owner.brand_name} has a new product check it out",
+                    registration_token=list(device.values_list("registration_id", flat=True)),
+                    dataObject={"data": json.dumps(serializer.data)},
+                )
 
             return Response(
                 {"status": True, "data": serializer.data},
@@ -261,12 +271,12 @@ class ReviewView(APIView):
             device = FCMDevice.objects.filter(user=owner)
             if device.exists():
                 device = device.first()
-            # device.send_message(Message(data=dict(data)))
+                # device.send_message(Message(data=dict(data)))
                 sendPush(
                     title="Order Review",
                     msg=data["comments"],
                     registration_token=[device.registration_id],
-                    dataObject={"data":json.dumps(data)}
+                    dataObject={"data": json.dumps(data)},
                 )
 
             return Response(
@@ -1124,7 +1134,7 @@ class Checkout(APIView):
                         title="New Order",
                         msg=data["comments"],
                         registration_token=[device.registration_id],
-                        dataObject={"data":json.dumps(data)}
+                        dataObject={"data": json.dumps(data)},
                     )
 
             return Response(

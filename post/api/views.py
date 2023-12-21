@@ -121,6 +121,17 @@ class PostView(APIView):
                 img = Image.objects.create(post=post, image=image)
                 img.save()
             data = UserPostDetailSerializer(Post.objects.get(id=post.id)).data
+            device = FCMDevice.objects.filter(user__in=post.owner.followers.all())
+            # print(list(device.values_list("registration_id", flat=True)))
+            if device.exists():
+                #device = device.first()
+                sendPush(
+                    title="New Post",
+                    msg=f"{post.owner.brand_name} has a new post check it out",
+                    registration_token=list(device.values_list("registration_id", flat=True)),
+                    dataObject={"data":json.dumps(data)}
+                )
+
             return Response(
                 {
                     "status": True,
