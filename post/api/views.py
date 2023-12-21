@@ -192,7 +192,7 @@ class LikePost(APIView):
                     device = device.first()
                     #device.send_message(Message(data=dict(data)))
                     sendPush(
-                        title="Like Post",
+                        title="Post Liked",
                         msg=data["comments"],
                         registration_token=[device.registration_id],
                         dataObject=data
