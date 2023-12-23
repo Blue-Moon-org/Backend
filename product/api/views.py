@@ -256,7 +256,7 @@ class ReviewView(APIView):
             owner = serializer.instance.product.owner
             notify = Notification.objects.create(
                 notification_type="R",
-                comments=f"@{user.firstname} reviewd your product",
+                comments=f"@{user.firstname} reviewed your product",
                 owner=owner,
                 user=user,
                 object_id=serializer.instance.id,
