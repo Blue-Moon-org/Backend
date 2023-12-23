@@ -51,6 +51,7 @@ class ReportAdmin(admin.ModelAdmin):
     )
     list_filter = (
         "user",
+        "recipient",
         
     )
 admin.site.register(User, UserAdmin)

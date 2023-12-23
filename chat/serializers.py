@@ -169,7 +169,8 @@ class ChatListSerializer(serializers.ModelSerializer):
     def get_is_blocked(self, obj):
         user = self.context.get("user")
         other = obj.participants.exclude(id=user.id).first()
-        return other.users_blocked.filter(id=user.id).exists()
+        val = other.users_blocked.filter(id=user.id).exists() if other else False
+        return val
 
     def get_active_order(self, obj):
         user = self.context.get("user")
